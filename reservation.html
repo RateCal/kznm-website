@@ -603,7 +603,7 @@
     // 路線案内カードを動的生成
     document.addEventListener('DOMContentLoaded', () => {
       const guide = document.getElementById('line-guide');
-      LINES.forEach(line => {
+      LINES.filter(line => line.own !== false).forEach(line => {
         const card = document.createElement('div');
         card.className = 'line-guide-card';
         card.style.borderLeftColor = line.color;

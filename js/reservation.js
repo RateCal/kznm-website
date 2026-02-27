@@ -68,16 +68,18 @@ const LINES = [
   {
     id: 'kawagoe-line',
     name: '川越線',
-    operator: '株式会社 松島急行',
+    operator: '他社線',
     color: '#1c3a6e',
-    stationCodes: ['Y01', 'Y02']
+    stationCodes: ['Y01', 'Y02'],
+    own: false
   },
   {
     id: 'maigura-line',
     name: '舞倉線',
-    operator: '株式会社 松島急行',
+    operator: '他社線',
     color: '#2e5fa3',
-    stationCodes: ['X01']
+    stationCodes: ['X01'],
+    own: false
   }
 ];
 
