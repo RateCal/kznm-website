@@ -38,7 +38,7 @@ const LINES = [
     id: 'kawagoe-line',
     name: '川越線',
     operator: '株式会社 松島急行',
-    color: '#2d5016',
+    color: '#1c3a6e',
     stationCodes: ['Y01', 'Y02']
   },
   {
@@ -52,7 +52,7 @@ const LINES = [
     id: 'hanashimadai-line',
     name: '花島台線',
     operator: '株式会社 松島急行',
-    color: '#8fbc4b',
+    color: '#5ba8d8',
     stationCodes: ['B01']
   }
 ];

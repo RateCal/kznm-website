@@ -10,14 +10,14 @@
 }
 
 :root {
-  --color-primary:    #2d5016;   /* 深緑 */
-  --color-secondary:  #8fbc4b;   /* 若草 */
+  --color-primary:    #1c3a6e;   /* 深藍 */
+  --color-secondary:  #4a8fd4;   /* 空青 */
   --color-accent:     #c8a951;   /* 金茶 */
-  --color-bg:         #fafaf7;   /* 生成り */
+  --color-bg:         #f5f7fa;   /* 白藍 */
   --color-text:       #2c2c2c;
   --color-text-light: #666;
   --color-white:      #fff;
-  --color-border:     #e0ddd5;
+  --color-border:     #d0d8e8;
 
   --font-ja: 'Noto Serif JP', 'Yu Mincho', 'YuMincho', serif;
   --font-en: 'Cormorant Garamond', 'Georgia', serif;
@@ -415,7 +415,7 @@ ul {
   border-radius: var(--radius);
   overflow: hidden;
   aspect-ratio: 4/3;
-  background: #d8e4c8;
+  background: #c8d8ea;
 }
 
 .about-image img {
@@ -457,7 +457,7 @@ ul {
 .service-icon {
   width: 56px;
   height: 56px;
-  background: #e8f0d8;
+  background: #daeaf8;
   border-radius: 50%;
   display: flex;
   align-items: center;
