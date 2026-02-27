@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#2d5016"/>
+  <!-- 葉っぱのシンボル -->
+  <path d="M16 6 C10 10 8 18 12 24 C14 20 18 16 24 14 C20 10 18 6 16 6Z"
+        fill="#8fbc4b" opacity="0.9"/>
+  <path d="M12 24 C13 21 15 18 20 16"
+        stroke="#c8a951" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

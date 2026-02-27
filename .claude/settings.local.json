@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config --global user.name)",
+      "Bash(git config --global user.email)",
+      "Bash(test -f /opt/homebrew/bin/brew)",
+      "Bash(git init)",
+      "Bash(git config user.name \"RateCal\")",
+      "Bash(git config user.email \"s7rinkai@gmail.com\")",
+      "Bash(git add .)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

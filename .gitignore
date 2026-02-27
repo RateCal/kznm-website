@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# エディター
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ログ・一時ファイル
+*.log
+*.tmp
+*.swp
+*~
+
+# 環境設定（誤ってコミットしないように）
+.env
+.env.local
