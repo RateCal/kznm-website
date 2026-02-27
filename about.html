@@ -26,6 +26,7 @@
           <a href="about.html" class="active">会社概要</a>
           <a href="services.html">事業内容</a>
           <a href="news.html">お知らせ</a>
+          <a href="reservation.html">列車予約</a>
           <a href="contact.html">お問い合わせ</a>
         </nav>
         <button class="menu-toggle" id="menu-toggle" aria-label="メニューを開く">
@@ -78,8 +79,7 @@
       <div style="display: grid; grid-template-columns: 280px 1fr; gap: 64px; align-items: start;" class="fade-in">
         <div style="text-align: center;">
           <div style="width: 200px; height: 200px; border-radius: 50%; background: #d8e4c8; margin: 0 auto 20px; overflow: hidden;">
-            <!-- ▼ 代表者の写真を配置してください（推奨: 400×400px, 正方形） -->
-            <img src="images/representative.jpg" alt="代表者写真" style="width:100%; height:100%; object-fit:cover;">
+            <img src="images/arlate.jpg" alt="代表取締役員 ああるらて" style="width:100%; height:100%; object-fit:cover;">
           </div>
           <p style="font-size: 0.8rem; color: var(--color-text-light); letter-spacing: 0.1em;">代表取締役員</p>
           <p style="font-size: 1.1rem; letter-spacing: 0.15em; color: var(--color-primary); margin-top: 4px;">
@@ -107,7 +107,7 @@
         <table class="info-table">
           <tr>
             <th>会社名</th>
-            <td>京華風の芽（Keik Kazenome）</td>
+            <td>京華風の芽（Kyoka Kazenome）</td>
           </tr>
           <tr>
             <th>英語表記</th>
@@ -168,6 +168,77 @@
             </td>
           </tr>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 経営方針 ==================== -->
+  <section class="section" style="background: var(--color-bg);">
+    <div class="container">
+      <p class="section-title">経営方針</p>
+      <span class="section-title-en">Management Policy</span>
+      <div style="max-width: 800px;" class="fade-in">
+        <p style="color: var(--color-text-light); letter-spacing: 0.07em; line-height: 2.1; margin-bottom: 40px;">
+          当社は日本・台湾・パラオの三国との友好的な連携のもと、
+          国際的な視点を持った経営を推進しています。
+          三国の文化・制度を尊重し、相互発展を目指す「三国協調」の精神を
+          経営方針の根本に据えています。
+        </p>
+
+        <!-- 三国協調 国旗エリア -->
+        <div style="display: flex; gap: 48px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 48px;">
+
+          <!-- 日本 -->
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; flex: 1; min-width: 160px;">
+            <div style="width: 180px; height: 120px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.12);">
+              <img src="images/japan.gif" alt="日本国旗" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="text-align: center;">
+              <p style="font-size: 0.95rem; font-weight: 700; letter-spacing: 0.12em; color: var(--color-primary);">日本</p>
+              <p style="font-size: 0.75rem; color: var(--color-text-light); letter-spacing: 0.08em;">Japan</p>
+            </div>
+          </div>
+
+          <!-- 中央の協調マーク -->
+          <div style="display: flex; align-items: center; justify-content: center; flex: 0; padding-top: 40px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--color-text-light);">
+              <span style="font-size: 1.5rem; letter-spacing: 0.2em;">×</span>
+              <span style="font-size: 0.65rem; letter-spacing: 0.15em; white-space: nowrap;">三国協調</span>
+            </div>
+          </div>
+
+          <!-- 台湾 -->
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; flex: 1; min-width: 160px;">
+            <div style="width: 180px; height: 120px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.12);">
+              <img src="images/taiwan.png" alt="台湾国旗" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="text-align: center;">
+              <p style="font-size: 0.95rem; font-weight: 700; letter-spacing: 0.12em; color: var(--color-primary);">台湾</p>
+              <p style="font-size: 0.75rem; color: var(--color-text-light); letter-spacing: 0.08em;">Taiwan</p>
+            </div>
+          </div>
+
+          <!-- 中央の協調マーク -->
+          <div style="display: flex; align-items: center; justify-content: center; flex: 0; padding-top: 40px;">
+            <span style="font-size: 1.5rem; color: var(--color-text-light); letter-spacing: 0.2em;">×</span>
+          </div>
+
+          <!-- パラオ -->
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; flex: 1; min-width: 160px;">
+            <div style="width: 180px; height: 120px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.12);">
+              <img src="images/palau.png" alt="パラオ国旗" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="text-align: center;">
+              <p style="font-size: 0.95rem; font-weight: 700; letter-spacing: 0.12em; color: var(--color-primary);">パラオ</p>
+              <p style="font-size: 0.75rem; color: var(--color-text-light); letter-spacing: 0.08em;">Palau</p>
+            </div>
+          </div>
+
+        </div><!-- end 国旗エリア -->
+
+        <p style="font-size: 0.82rem; color: var(--color-text-light); letter-spacing: 0.06em; line-height: 2; border-top: 1px solid var(--color-border); padding-top: 20px;">
+          ※ 三国協調方針の詳細については、別途お問い合わせください。
+        </p>
       </div>
     </div>
   </section>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>列車予約 | 京華風の芽</title>
+  <meta name="description" content="京華風の芽グループの列車予約システムです。">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ==================== 検索フォーム ==================== */
+    .search-box {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .search-grid {
+      display: grid;
+      grid-template-columns: 1fr 44px 1fr;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+    .search-grid .swap-btn {
+      height: 44px;
+      width: 44px;
+      border: 1px solid var(--color-border);
+      border-radius: 50%;
+      background: var(--color-bg);
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .search-grid .swap-btn:hover { background: var(--color-secondary); color: white; }
+    .search-sub-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .search-box label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: var(--color-primary);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .search-box select,
+    .search-box input[type="date"],
+    .search-box input[type="number"] {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 0 12px;
+      font-size: 0.95rem;
+      font-family: var(--font-ja);
+      color: var(--color-primary);
+      background: var(--color-bg);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .search-box select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232d5016' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    /* ==================== 検索結果 ==================== */
+    #results-section { display: none; margin-top: 48px; }
+    .result-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .result-header h2 {
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+    .result-count { font-size: 0.82rem; color: var(--color-text-light); }
+
+    /* 列車カード */
+    .train-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .train-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .train-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: var(--color-bg);
+      border-left: 4px solid var(--color-secondary);
+    }
+    .train-type-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 2px;
+      letter-spacing: 0.08em;
+    }
+    .train-line-name {
+      font-size: 0.8rem;
+      color: var(--color-text-light);
+      letter-spacing: 0.06em;
+    }
+    .train-card-body {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+    .train-times {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .dep-time, .arr-time {
+      font-family: var(--font-en);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: -0.02em;
+    }
+    .travel-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .travel-min {
+      font-size: 0.72rem;
+      color: var(--color-text-light);
+      letter-spacing: 0.06em;
+    }
+    .arrow-line {
+      width: 60px;
+      height: 1px;
+      background: var(--color-border);
+      position: relative;
+    }
+    .arrow-line::after {
+      content: '▶';
+      position: absolute;
+      right: -4px;
+      top: -7px;
+      font-size: 0.6rem;
+      color: var(--color-text-light);
+    }
+    .train-station-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+      margin-top: 6px;
+      letter-spacing: 0.06em;
+    }
+    .train-fare-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .fare-price {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      letter-spacing: -0.01em;
+    }
+    .fare-note { font-size: 0.72rem; font-weight: 400; color: var(--color-text-light); }
+    .seat-avail {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+    .seat-avail.available { color: #2d5016; background: #e8f5d8; }
+    .seat-avail.low-seat  { color: #c0392b; background: #fdecea; }
+    .seat-avail.sold-out  { color: #999;    background: #f0f0f0; }
+    .reserve-btn { padding: 10px 20px; font-size: 0.82rem; white-space: nowrap; }
+    .reserve-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ==================== モーダル ==================== */
+    #reserve-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #reserve-modal.open { display: flex; }
+    .modal-inner {
+      background: white;
+      border-radius: var(--radius);
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--color-primary);
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .modal-summary {
+      background: var(--color-bg);
+      border-radius: 4px;
+      padding: 16px;
+      font-size: 0.88rem;
+      color: var(--color-text-light);
+      line-height: 1.9;
+      letter-spacing: 0.05em;
+      margin-bottom: 28px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40px;
+      height: 40px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--color-text-light);
+    }
+
+    /* ==================== アラート・成功メッセージ ==================== */
+    #search-alert {
+      display: none;
+      padding: 14px 20px;
+      background: #fdecea;
+      border-left: 4px solid #c0392b;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      color: #c0392b;
+      margin-top: 16px;
+    }
+    #reserve-success {
+      display: none;
+      padding: 24px;
+      background: #e8f5e9;
+      border-left: 4px solid var(--color-secondary);
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      color: var(--color-primary);
+      line-height: 2;
+      letter-spacing: 0.05em;
+      margin-top: 32px;
+    }
+
+    /* ==================== 路線案内 ==================== */
+    .line-guide {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .line-guide-card {
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 16px;
+      border-left-width: 4px;
+    }
+    .line-guide-card h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--color-primary);
+      margin-bottom: 6px;
+    }
+    .line-guide-card .operator {
+      font-size: 0.72rem;
+      color: var(--color-text-light);
+      margin-bottom: 8px;
+    }
+    .station-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .station-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      background: var(--color-bg);
+      border-radius: 20px;
+      color: var(--color-text-light);
+      letter-spacing: 0.04em;
+    }
+
+    /* ==================== レスポンシブ ==================== */
+    @media (max-width: 768px) {
+      .search-grid { grid-template-columns: 1fr; }
+      .search-grid .swap-btn { display: none; }
+      .search-sub-grid { grid-template-columns: 1fr 1fr; }
+      .train-card-body { grid-template-columns: 1fr; gap: 12px; }
+      .train-fare-area { align-items: flex-start; flex-direction: row; flex-wrap: wrap; align-items: center; }
+      .line-guide { grid-template-columns: 1fr; }
+      .dep-time, .arr-time { font-size: 1.4rem; }
+    }
+    @media (max-width: 480px) {
+      .search-box { padding: 24px; }
+      .search-sub-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header" id="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="site-logo">
+          <span class="logo-ja">京華風の芽</span>
+          <span class="logo-en">Kznm LLC</span>
+        </a>
+        <nav class="global-nav" id="global-nav">
+          <a href="index.html">ホーム</a>
+          <a href="about.html">会社概要</a>
+          <a href="services.html">事業内容</a>
+          <a href="news.html">お知らせ</a>
+          <a href="reservation.html" class="active">列車予約</a>
+          <a href="contact.html">お問い合わせ</a>
+        </nav>
+        <button class="menu-toggle" id="menu-toggle" aria-label="メニューを開く">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="container">
+      <h1>列車予約</h1>
+      <p class="en">Train Reservation</p>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <div class="container">
+      <ol>
+        <li><a href="index.html">ホーム</a></li>
+        <li>列車予約</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ==================== 検索フォーム ==================== -->
+  <section class="section" style="background: var(--color-bg);">
+    <div class="container">
+
+      <!-- 閉鎖中バナー -->
+      <div style="background:#fff3cd; border:1px solid #ffc107; border-left:4px solid #e67e00; border-radius:var(--radius); padding:20px 24px; margin-bottom:40px; max-width:800px;">
+        <p style="font-size:0.82rem; font-weight:700; letter-spacing:0.1em; color:#7a4f00; margin-bottom:6px;">&#9888; オンライン予約 受付停止中</p>
+        <p style="font-size:0.82rem; color:#7a4f00; letter-spacing:0.06em; line-height:1.9;">
+          現在、オンライン予約の受付を一時停止しています。<br>
+          時刻表の検索はご利用いただけます。ご予約はお電話またはメールにてお問い合わせください。
+        </p>
+      </div>
+
+      <p class="section-title">列車を検索する</p>
+      <span class="section-title-en">Search Trains</span>
+
+      <div class="search-box fade-in" style="max-width: 800px;">
+
+        <!-- 出発地・目的地 -->
+        <div class="search-grid">
+          <div>
+            <label for="from-station">出発駅</label>
+            <select id="from-station">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          <button class="swap-btn" onclick="swapStations()" title="出発地と目的地を入れ替える">⇄</button>
+          <div>
+            <label for="to-station">到着駅</label>
+            <select id="to-station">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 日付・人数・座席クラス -->
+        <div class="search-sub-grid">
+          <div>
+            <label for="travel-date">乗車日</label>
+            <input type="date" id="travel-date">
+          </div>
+          <div>
+            <label for="passengers">人数</label>
+            <select id="passengers">
+              <option value="1">1名</option>
+              <option value="2">2名</option>
+              <option value="3">3名</option>
+              <option value="4">4名</option>
+              <option value="5">5名</option>
+              <option value="6">6名</option>
+            </select>
+          </div>
+          <div>
+            <label for="seat-class">座席クラス</label>
+            <select id="seat-class">
+              <option value="free">自由席</option>
+              <option value="reserve" selected>指定席</option>
+              <option value="green">グリーン車</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%; font-size:0.95rem; padding:14px;" onclick="searchTrains()">
+          列車を検索する
+        </button>
+        <div id="search-alert"></div>
+      </div>
+
+      <!-- ==================== 検索結果 ==================== -->
+      <div id="results-section" style="max-width:800px;">
+        <div class="result-header">
+          <h2 id="result-title"></h2>
+          <span class="result-count" id="result-count"></span>
+        </div>
+        <div id="search-results"></div>
+      </div>
+
+      <!-- 予約完了メッセージ -->
+      <div id="reserve-success" style="max-width:800px;">
+        ご予約を受け付けました。<br>
+        ご登録のメールアドレスに確認メールをお送りします。<br>
+        ご不明な点はお問い合わせください。
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== 路線案内 ==================== -->
+  <section class="section" style="background: var(--color-white);">
+    <div class="container">
+      <p class="section-title">ご利用路線</p>
+      <span class="section-title-en">Lines & Routes</span>
+      <div class="line-guide fade-in" id="line-guide"></div>
+    </div>
+  </section>
+
+  <!-- ==================== ご利用案内 ==================== -->
+  <section class="section" style="background: var(--color-bg);">
+    <div class="container">
+      <p class="section-title">ご利用案内</p>
+      <span class="section-title-en">Information</span>
+      <div style="max-width:720px;" class="fade-in">
+        <table class="info-table">
+          <tr>
+            <th>予約受付期間</th>
+            <td>乗車日の1ヶ月前 9:00 〜 出発時刻まで</td>
+          </tr>
+          <tr>
+            <th>予約変更・取消</th>
+            <td>乗車日の前日17:00まで無料。以降は所定のキャンセル料が発生します。</td>
+          </tr>
+          <tr>
+            <th>座席クラス</th>
+            <td>
+              <strong>自由席</strong>：乗車券のみ。指定なし。<br>
+              <strong>指定席</strong>：乗車券＋座席指定料金（+¥520）。<br>
+              <strong>グリーン車</strong>：上位クラス座席（特急のみ設定、+¥1,050）。
+            </td>
+          </tr>
+          <tr>
+            <th>お支払い</th>
+            <td>予約確定後、案内メールに記載の方法でお支払いください。</td>
+          </tr>
+          <tr>
+            <th>お問い合わせ</th>
+            <td>
+              Mail: s7rinkai@gmail.com<br>
+              受付時間：平日 9:00〜17:00 / 土日祝 9:00〜13:00
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 予約モーダル ==================== -->
+  <div id="reserve-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+    <div class="modal-inner" style="position:relative;">
+      <button class="modal-close" onclick="closeModal()" aria-label="閉じる">×</button>
+      <p class="modal-title" id="modal-heading">予約内容の確認</p>
+      <div class="modal-summary" id="modal-summary"></div>
+
+      <form id="reserve-form" novalidate>
+        <input type="hidden" id="modal-train-id" name="train-id">
+        <input type="hidden" id="modal-fare"     name="fare">
+
+        <div class="form-group">
+          <label for="res-name">お名前（代表者）<span class="required">＊</span></label>
+          <input type="text" id="res-name" name="name" placeholder="例）山田 太郎" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="res-name-kana">フリガナ<span class="required">＊</span></label>
+          <input type="text" id="res-name-kana" name="name-kana" placeholder="例）ヤマダ タロウ" required>
+        </div>
+        <div class="form-group">
+          <label for="res-email">メールアドレス<span class="required">＊</span></label>
+          <input type="email" id="res-email" name="email" placeholder="例）info@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group" style="margin-bottom:28px;">
+          <label for="res-tel">電話番号</label>
+          <input type="tel" id="res-tel" name="tel" placeholder="例）000-0000-0000" autocomplete="tel">
+        </div>
+
+        <div style="font-size:0.78rem; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:20px; line-height:1.9;">
+          ※ 予約完了メールを送信します。迷惑メールフォルダもご確認ください。<br>
+          ※ 本システムはデモ版です。実際の予約は成立しません。
+        </div>
+
+        <div style="display:flex; gap:12px;">
+          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeModal()">戻る</button>
+          <button type="submit" class="btn btn-primary" style="flex:2;">予約を確定する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <p class="logo-ja">京華風の芽</p>
+          <p class="logo-en">Kznm LLC</p>
+          <p>瑠璃郡 風の芽市 小枝神宮 二丁目 851番<br>風の芽中央ビル<br>Mail: s7rinkai@gmail.com</p>
+        </div>
+        <div class="footer-col">
+          <h4>サイトマップ</h4>
+          <ul>
+            <li><a href="index.html">ホーム</a></li>
+            <li><a href="about.html">会社概要</a></li>
+            <li><a href="services.html">事業内容</a></li>
+            <li><a href="news.html">お知らせ</a></li>
+            <li><a href="reservation.html">列車予約</a></li>
+            <li><a href="contact.html">お問い合わせ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>事業内容</h4>
+          <ul>
+            <li><a href="services.html">旅客運輸</a></li>
+            <li><a href="services.html">事業開発</a></li>
+            <li><a href="services.html">不動産開発</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>ポリシー</h4>
+          <ul>
+            <li><a href="privacy.html">プライバシーポリシー</a></li>
+            <li><a href="#">特定商取引法に基づく表示</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 京華風の芽 (Kznm LLC). All Rights Reserved.</p>
+        <p>Designed with care.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/reservation.js"></script>
+  <script>
+    // 路線案内カードを動的生成
+    document.addEventListener('DOMContentLoaded', () => {
+      const guide = document.getElementById('line-guide');
+      LINES.forEach(line => {
+        const card = document.createElement('div');
+        card.className = 'line-guide-card';
+        card.style.borderLeftColor = line.color;
+        card.innerHTML = `
+          <h4>${line.name}</h4>
+          <p class="operator">${line.operator}</p>
+          <div class="station-list">
+            ${line.stationCodes.map(code => {
+              const st = STATION_REGISTRY[code];
+              return `<span class="station-pill" title="${code}">${st ? st.name : code} <span style="font-size:0.65rem;opacity:0.7;">[${code}]</span></span>`;
+            }).join('')}
+          </div>
+        `;
+        guide.appendChild(card);
+      });
+
+      // 検索結果件数の更新
+      const observer = new MutationObserver(() => {
+        const count = document.querySelectorAll('#search-results .train-card').length;
+        document.getElementById('result-count') && (document.getElementById('result-count').textContent = `${count}件`);
+      });
+      observer.observe(document.getElementById('search-results'), { childList: true });
+    });
+  </script>
+</body>
+</html>
