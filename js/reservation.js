@@ -4,25 +4,42 @@
  */
 
 // ==================== 駅データ（管理番号付き） ====================
-// reading フィールドでドロップダウンのあ～ん並び順を制御
+// numbered: true → ドロップダウン上部に英数字順表示、false → 下部に配置
 const STATION_REGISTRY = {
-  'A01': { name: '瑠璃松島',     reading: 'るりまつしま',         dir: 'A', dirName: '紡乃方面' },
-  'A02': { name: '下松市',       reading: 'くだまつし',           dir: 'A', dirName: '紡乃方面' },
-  'A03': { name: '氷城',         reading: 'こおりじょう',         dir: 'A', dirName: '紡乃方面' },
-  'A04': { name: '青乃鹿',       reading: 'あおのしか',           dir: 'A', dirName: '紡乃方面' },
-  'A05': { name: '新雪見野',     reading: 'しんゆきみの',         dir: 'A', dirName: '紡乃方面' },
-  'A06': { name: '落合もみじ口', reading: 'おちあいもみじぐち',   dir: 'A', dirName: '紡乃方面' },
-  'A07': { name: '紡乃市',       reading: 'つむぎのし',           dir: 'A', dirName: '紡乃方面' },
-  'A08': { name: '新紡乃',       reading: 'しんつむぎの',         dir: 'A', dirName: '紡乃方面' },
-  'Y01': { name: '川越',         reading: 'かわごえ',             dir: 'Y', dirName: '川越方面' },
-  'Y02': { name: '楓高野台',     reading: 'かえでこうやだい',     dir: 'Y', dirName: '川越方面' },
-  'X01': { name: '新渋谷',       reading: 'しんしぶや',           dir: 'X', dirName: '新渋谷方面' },
-  'B01': { name: '帯の花',       reading: 'おびのはな',           dir: 'B', dirName: '花島台方面' },
+  // A: 紡乃方面（松島）
+  'A1': { name: '瑠璃松島',     reading: 'るりまつしま',         numbered: true,  dirName: '紡乃方面（松島）' },
+  'A2': { name: '下松市',       reading: 'くだまつし',           numbered: true,  dirName: '紡乃方面（松島）' },
+  'A3': { name: '氷城',         reading: 'こおりじょう',         numbered: true,  dirName: '紡乃方面（松島）' },
+  'A4': { name: '青乃鹿',       reading: 'あおのしか',           numbered: true,  dirName: '紡乃方面（松島）' },
+  'A5': { name: '新雪見野',     reading: 'しんゆきみの',         numbered: true,  dirName: '紡乃方面（松島）' },
+  'A6': { name: '落合もみじ口', reading: 'おちあいもみじぐち',   numbered: true,  dirName: '紡乃方面（松島）' },
+  'A7': { name: '紡乃市',       reading: 'つむぎのし',           numbered: true,  dirName: '紡乃方面（松島）' },
+  'A8': { name: '新紡乃',       reading: 'しんつむぎの',         numbered: true,  dirName: '紡乃方面（松島）' },
+  // B: 東灘方面（松島）
+  'B1': { name: '東灘台',       reading: 'ひがしなだだい',       numbered: true,  dirName: '東灘方面（松島）' },
+  'B2': { name: '石塚大泉',     reading: 'いしづかおおいずみ',   numbered: true,  dirName: '東灘方面（松島）' },
+  'B3': { name: '西都',         reading: 'にしみやこ',           numbered: true,  dirName: '東灘方面（松島）' },
+  'B4': { name: '新々都心',     reading: 'しんしんとしん',       numbered: true,  dirName: '東灘方面（松島）' },
+  // C: 花島台方面（松島）
+  'C1': { name: '帯の花',       reading: 'おびのはな',           numbered: true,  dirName: '花島台方面（松島）' },
+  'C2': { name: '落合新花島',   reading: 'おちあいしんはなしま', numbered: true,  dirName: '花島台方面（松島）' },
+  // ナンバリングなし（下部表示）
+  'Y01': { name: '川越',         reading: 'かわごえ',             numbered: false, dirName: '川越方面（長岡）' },
+  'Y02': { name: '楓高野台',     reading: 'かえでこうやだい',     numbered: false, dirName: '川越方面（長岡）' },
+  'X01': { name: '新渋谷',       reading: 'しんしぶや',           numbered: false, dirName: '新渋谷方面（舞倉）' },
 };
 
-// あ～ん順でソートした駅コード一覧
+// 英数字順（ナンバリングあり先頭）→ ナンバリングなしはあ～ん順で末尾
 const STATIONS_SORTED = Object.entries(STATION_REGISTRY)
-  .sort((a, b) => a[1].reading.localeCompare(b[1].reading, 'ja'))
+  .sort(([codeA, stA], [codeB, stB]) => {
+    if (stA.numbered && !stB.numbered) return -1;
+    if (!stA.numbered && stB.numbered) return 1;
+    if (stA.numbered && stB.numbered) {
+      // A1<A2<...<B1<...C1: アルファベット→数字の英数字順
+      return codeA.localeCompare(codeB, 'en', { numeric: true });
+    }
+    return stA.reading.localeCompare(stB.reading, 'ja');
+  })
   .map(([code]) => code);
 
 // ==================== 路線データ ====================
@@ -32,7 +49,21 @@ const LINES = [
     name: '紡乃線',
     operator: '株式会社 松島急行',
     color: '#c8a951',
-    stationCodes: ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08']
+    stationCodes: ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
+  },
+  {
+    id: 'tozai-line',
+    name: '東西線',
+    operator: '株式会社 松島急行',
+    color: '#4a7ab5',
+    stationCodes: ['B1', 'B2', 'B3', 'B4']
+  },
+  {
+    id: 'matsushima-main-line',
+    name: '松島線',
+    operator: '株式会社 松島急行',
+    color: '#5ba8d8',
+    stationCodes: ['C1', 'C2']
   },
   {
     id: 'kawagoe-line',
@@ -42,18 +73,11 @@ const LINES = [
     stationCodes: ['Y01', 'Y02']
   },
   {
-    id: 'matsushima-line',
-    name: '松島線',
+    id: 'maigura-line',
+    name: '舞倉線',
     operator: '株式会社 松島急行',
-    color: '#4a7ab5',
+    color: '#2e5fa3',
     stationCodes: ['X01']
-  },
-  {
-    id: 'hanashimadai-line',
-    name: '花島台線',
-    operator: '株式会社 松島急行',
-    color: '#5ba8d8',
-    stationCodes: ['B01']
   }
 ];
 
@@ -151,17 +175,17 @@ function populateStationSelects() {
   const toSel   = document.getElementById('to-station');
   if (!fromSel || !toSel) return;
 
-  // あ～ん順で追加
+  // 英数字順（ナンバリングなしは末尾）で追加
   for (const code of STATIONS_SORTED) {
     const st = STATION_REGISTRY[code];
-    const label = `${st.name}　[${code}]`;
+    const label = st.numbered ? `${st.name}　[${code}]` : st.name;
     fromSel.add(new Option(label, code));
     toSel.add(new Option(label, code));
   }
 
   // デフォルト
-  fromSel.value = 'A01';
-  toSel.value   = 'A05';
+  fromSel.value = 'A1';
+  toSel.value   = 'A5';
 }
 
 // 日付最小値を今日に設定
@@ -197,7 +221,9 @@ function searchTrains() {
   const dayNames = ['日','月','火','水','木','金','土'];
   const dateStr  = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dayNames[d.getDay()]}）`;
 
-  resultTitle.textContent = `${fromName} [${fromCode}] → ${toName} [${toCode}]　${dateStr}　${pax}名`;
+  const fromLabel = STATION_REGISTRY[fromCode].numbered ? `${fromName} [${fromCode}]` : fromName;
+  const toLabel   = STATION_REGISTRY[toCode].numbered   ? `${toName} [${toCode}]`   : toName;
+  resultTitle.textContent = `${fromLabel} → ${toLabel}　${dateStr}　${pax}名`;
   resultArea.innerHTML = '';
 
   const trains = generateTrains(fromCode, toCode, date);
@@ -230,8 +256,8 @@ function searchTrains() {
             <div class="arr-time">${train.arrTime}</div>
           </div>
           <div class="train-station-labels">
-            <span>${fromName} <small style="color:#aaa;">[${fromCode}]</small></span>
-            <span>${toName} <small style="color:#aaa;">[${toCode}]</small></span>
+            <span>${fromLabel} </span>
+            <span>${toLabel}</span>
           </div>
         </div>
         <div class="train-fare-area">
