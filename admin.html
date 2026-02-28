@@ -350,7 +350,7 @@
         <p id="resv-count" style="font-size:0.77rem; color:var(--color-text-light); margin:3px 0 0;"></p>
       </div>
       <input type="text" id="resv-filter" placeholder="MCIDで絞り込み…" oninput="renderReservations()">
-      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="renderReservations()">↻ 更新</button>
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="_fetchReservationsFromGitHub().then(()=>renderReservations())">↻ GitHub から更新</button>
       <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem; color:#d03030; border-color:#d03030;" onclick="clearAllReservations()">全件削除</button>
     </div>
     <div id="resv-list" style="overflow-x:auto;"></div>
@@ -421,7 +421,7 @@ function switchAdmTab(tab) {
   if (!isTimetable) {
     // gh-panel を強制非表示（inline styleで上書き）
     document.getElementById('gh-panel').style.display = 'none';
-    renderReservations();
+    _fetchReservationsFromGitHub().then(() => renderReservations());
   } else {
     document.getElementById('gh-panel').style.display = '';
   }
@@ -431,6 +431,27 @@ function switchAdmTab(tab) {
 // 予約一覧
 // =============================================================================
 const RESV_KEY = 'kznm-reservations-v1';
+
+// GitHub から data/reservations.json を取得して localStorage に反映
+async function _fetchReservationsFromGitHub() {
+  const owner = localStorage.getItem('gh-owner') || '';
+  const repo  = localStorage.getItem('gh-repo')  || '';
+  const pat   = localStorage.getItem('gh-pat')   || '';
+  if (!owner || !repo || !pat) return;
+  try {
+    const headers = { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' };
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/data/reservations.json`, { headers });
+    if (!res.ok) return;
+    const data = await res.json();
+    // GitHub API はコンテンツを base64 で返す
+    const json = decodeURIComponent(
+      atob(data.content.replace(/\n/g, ''))
+        .split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2,'0')).join('')
+    );
+    localStorage.setItem(RESV_KEY, json);
+  } catch { /* 取得失敗は無視 */ }
+}
 
 function getReservations() {
   try {
@@ -1042,7 +1063,44 @@ function _scheduleAutoSync() {
   const radio = document.querySelector('input[name="gh-autosync"]:checked');
   if (!radio || radio.value !== 'always') return;
   clearTimeout(_autoSyncTimer);
-  _autoSyncTimer = setTimeout(() => syncToGitHub(true), 2000);
+  _autoSyncTimer = setTimeout(_syncTimetableOnly, 2000);
+}
+
+// 常時同期用：時刻表データ + 予約データを自動更新
+async function _syncTimetableOnly() {
+  const owner  = localStorage.getItem('gh-owner')  || '';
+  const repo   = localStorage.getItem('gh-repo')   || '';
+  const pat    = localStorage.getItem('gh-pat')    || '';
+  if (!owner || !repo || !pat) return;
+
+  const statusEl = document.getElementById('save-status');
+  statusEl.textContent = 'GitHub同期中...';
+
+  const headers = { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
+  // 同期する2ファイル
+  const autoFiles = [
+    { path: 'js/timetable-data.js',    content: buildCode() },
+    { path: 'data/reservations.json',  content: localStorage.getItem(RESV_KEY) || '{"reservations":[]}' },
+  ];
+
+  try {
+    const msg = `時刻表・予約データを自動更新 [${new Date().toLocaleString('ja-JP')}]`;
+    for (const file of autoFiles) {
+      const b64    = _toBase64(new TextEncoder().encode(file.content).buffer);
+      const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`, { headers });
+      const sha    = getRes.ok ? (await getRes.json()).sha : undefined;
+      const body   = { message: msg, content: b64 };
+      if (sha) body.sha = sha;
+      await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}`, {
+        method: 'PUT', headers, body: JSON.stringify(body),
+      });
+    }
+    const t = new Date();
+    statusEl.textContent = `GitHub同期済み ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+  } catch {
+    statusEl.textContent = 'GitHub同期失敗';
+  }
 }
 
 function toggleGhPanel() {
@@ -1067,25 +1125,21 @@ function loadGhConfig() {
   if (radio) radio.checked = true;
 }
 
-async function syncToGitHub(isAuto = false) {
+// 手動ボタン用：全サイトファイルを一括同期
+async function syncToGitHub() {
   const owner  = localStorage.getItem('gh-owner')  || '';
   const repo   = localStorage.getItem('gh-repo')   || '';
   const branch = localStorage.getItem('gh-branch') || 'main';
   const pat    = localStorage.getItem('gh-pat')    || '';
   if (!owner || !repo || !pat) {
-    if (!isAuto) {
-      document.getElementById('gh-panel').classList.add('open');
-      showToast('GitHub設定を入力してください');
-    }
+    document.getElementById('gh-panel').classList.add('open');
+    showToast('GitHub設定を入力してください');
     return;
   }
 
-  const btn      = document.getElementById('gh-sync-btn');
-  const statusEl = document.getElementById('save-status');
-  const setStatus = (msg) => isAuto ? (statusEl.textContent = msg) : (btn.textContent = msg);
-
-  if (!isAuto) btn.classList.add('syncing');
-  setStatus('接続中...');
+  const btn = document.getElementById('gh-sync-btn');
+  btn.classList.add('syncing');
+  btn.textContent = '接続中...';
 
   const h = {
     'Authorization': `token ${pat}`,
@@ -1106,17 +1160,27 @@ async function syncToGitHub(isAuto = false) {
     const baseTreeSha = (await cRes.json()).tree.sha;
 
     // 3. 各ファイルを fetch して blob 作成
-    const allPaths = ['js/timetable-data.js', ...SITE_FILES];
+    const allPaths = ['js/timetable-data.js', 'js/gh-sync-config.js', ...SITE_FILES];
     const treeItems = [];
     let done = 0;
 
     for (const path of allPaths) {
-      setStatus(`ファイル処理中… ${++done} / ${allPaths.length}`);
+      btn.textContent = `ファイル処理中… ${++done} / ${allPaths.length}`;
       try {
         let b64;
         if (path === 'js/timetable-data.js') {
           // 時刻表データは localStorage から動的生成
           b64 = _toBase64(new TextEncoder().encode(buildCode()).buffer);
+        } else if (path === 'js/gh-sync-config.js') {
+          // 予約同期用 GitHub 設定ファイル（reservation.html から利用）
+          const cfg = JSON.stringify({
+            owner: localStorage.getItem('gh-owner')  || '',
+            repo:  localStorage.getItem('gh-repo')   || '',
+            branch: localStorage.getItem('gh-branch') || 'main',
+            pat:   localStorage.getItem('gh-pat')    || '',
+          });
+          const src = `// 自動生成 — admin.html から同期されました\n// ⚠ このファイルには認証情報が含まれます。公開リポジトリでは取り扱いに注意してください。\nconst GH_SYNC_CONFIG = ${cfg};\n`;
+          b64 = _toBase64(new TextEncoder().encode(src).buffer);
         } else {
           const res = await fetch(path);
           if (!res.ok) continue; // 存在しないファイルはスキップ
@@ -1134,7 +1198,7 @@ async function syncToGitHub(isAuto = false) {
     if (treeItems.length === 0) throw new Error('同期できるファイルがありませんでした');
 
     // 4. 新しいツリーを作成
-    setStatus('コミット作成中...');
+    btn.textContent = 'コミット作成中...';
     const treeRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/git/trees`,
       { method: 'POST', headers: h, body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems }) }
@@ -1159,21 +1223,11 @@ async function syncToGitHub(isAuto = false) {
     );
     if (!updateRes.ok) throw new Error('ブランチの更新に失敗しました');
 
-    const t = new Date();
-    if (isAuto) {
-      statusEl.textContent =
-        `GitHub同期済み ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')} (${treeItems.length}件)`;
-    } else {
-      showToast(`${treeItems.length}ファイルを GitHub に同期しました！`);
-    }
+    showToast(`${treeItems.length}ファイルを GitHub に同期しました！`);
   } catch (e) {
-    if (isAuto) {
-      statusEl.textContent = 'GitHub同期失敗';
-    } else {
-      alert('同期に失敗しました:\n' + e.message);
-    }
+    alert('同期に失敗しました:\n' + e.message);
   } finally {
-    if (!isAuto) { btn.textContent = '🔄 GitHub に同期'; btn.classList.remove('syncing'); }
+    btn.textContent = '🔄 GitHub に同期'; btn.classList.remove('syncing');
   }
 }
 
@@ -1198,6 +1252,7 @@ function toggleReserveOpen() {
   if (!t) return;
   t.reserveOpen = !t.reserveOpen;
   saveState();
+  _syncTimetableOnly(); // 締切・開放は即時同期（常時モード設定に関わらず）
   // バッジとボタンをその場で更新
   const badge = document.getElementById('reserve-status-badge');
   const btn   = document.getElementById('reserve-toggle-btn');
@@ -1229,6 +1284,17 @@ function showToast(msg) {
 // =============================================================================
 renderList();
 loadGhConfig();
+
+// reservation.html 側で予約が入ったら自動同期をトリガー
+window.addEventListener('storage', (e) => {
+  if (e.key === RESV_KEY) _scheduleAutoSync();
+});
+
+// 初回起動時に全サイトを一括同期（セッション中1回のみ）
+if (!sessionStorage.getItem('init-sync-done')) {
+  sessionStorage.setItem('init-sync-done', '1');
+  syncToGitHub();
+}
 </script>
 <!-- Code injected by live-server -->
 <script>

@@ -1098,6 +1098,42 @@ function _saveReservation(data, seat, mcid, ticketNo) {
   } catch (e) { /* ignore */ }
 }
 
+// ── 予約データを GitHub に push（クロスネットワーク対応） ──────
+async function _pushReservationsToGitHub() {
+  // js/gh-sync-config.js（デプロイ済み）または localStorage から設定を取得
+  const cfg = (typeof GH_SYNC_CONFIG !== 'undefined' && GH_SYNC_CONFIG) || {
+    owner:  localStorage.getItem('gh-owner')  || '',
+    repo:   localStorage.getItem('gh-repo')   || '',
+    branch: localStorage.getItem('gh-branch') || 'main',
+    pat:    localStorage.getItem('gh-pat')    || '',
+  };
+  if (!cfg.owner || !cfg.repo || !cfg.pat) return; // 設定なしはスキップ
+
+  const raw = localStorage.getItem(RESV_STORAGE_KEY) || '{"reservations":[]}';
+  // UTF-8 対応 base64
+  const bytes = new TextEncoder().encode(raw);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  const b64 = btoa(binary);
+
+  const path    = 'data/reservations.json';
+  const headers = {
+    'Authorization': `token ${cfg.pat}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+  };
+  try {
+    const getRes = await fetch(
+      `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, { headers });
+    const sha  = getRes.ok ? (await getRes.json()).sha : undefined;
+    const body = { message: '予約データ更新', content: b64 };
+    if (sha) body.sha = sha;
+    await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+      method: 'PUT', headers, body: JSON.stringify(body),
+    });
+  } catch { /* 失敗しても予約処理は継続 */ }
+}
+
 // ── チケット生成 ──────────────────────────────────────────
 function _generateTicket(data, selectedSeat, mcid, ticketNo) {
   if (!ticketNo) ticketNo = 'RU' + Date.now().toString().slice(-8) + String(Math.floor(Math.random()*100)).padStart(2,'0');
@@ -1228,6 +1264,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const ticketNo = 'RU' + Date.now().toString().slice(-8) + String(Math.floor(Math.random()*100)).padStart(2,'0');
       document.getElementById('digital-ticket').innerHTML = _generateTicket(data, _selectedSeat, mcid, ticketNo);
       _saveReservation(data, _selectedSeat, mcid, ticketNo);
+      _pushReservationsToGitHub(); // GitHub に非同期で push（失敗しても予約は完了）
       _showModalStep('ticket');
     });
   }
