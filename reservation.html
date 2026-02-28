@@ -8,7 +8,7 @@
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* ==================== 検索フォーム ==================== */
@@ -77,6 +77,40 @@
       padding-right: 32px;
     }
 
+    /* ==================== 検索タブ ==================== */
+    .search-tabs {
+      display: flex;
+      max-width: 800px;
+      gap: 0;
+      margin-bottom: 0;
+    }
+    .search-tab {
+      padding: 11px 28px;
+      border: 1px solid var(--color-border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      background: #e8eef5;
+      color: var(--color-text-light);
+      font-size: 0.85rem;
+      font-family: var(--font-ja);
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      margin-right: 4px;
+    }
+    .search-tab.active {
+      background: var(--color-white);
+      color: var(--color-primary);
+      font-weight: 700;
+      border-color: var(--color-border);
+      position: relative;
+      bottom: -1px;
+      padding-bottom: 12px;
+      z-index: 1;
+    }
+    .search-tab:hover:not(.active) { background: #d4dce8; color: var(--color-primary); }
+    .search-box { border-radius: 0 8px 8px 8px; position: relative; }
+
     /* ==================== 検索結果 ==================== */
     #results-section { display: none; margin-top: 48px; }
     .result-header {
@@ -138,11 +172,12 @@
       gap: 16px;
     }
     .dep-time, .arr-time {
-      font-family: var(--font-en);
-      font-size: 1.8rem;
-      font-weight: 600;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
       color: var(--color-primary);
-      letter-spacing: -0.02em;
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
     }
     .travel-arrow {
       display: flex;
@@ -319,6 +354,84 @@
       letter-spacing: 0.04em;
     }
 
+    /* ==================== 座席マップ ==================== */
+    .modal-inner { max-width: 560px !important; }
+    .modal-step-ind { display:none; align-items:center; gap:6px; margin-bottom:14px; font-size:0.75rem; flex-wrap:wrap; }
+    .modal-step-ind.show { display:flex; }
+    .msi-item { color:#ccc; font-weight:600; letter-spacing:0.05em; white-space:nowrap; }
+    .msi-item.active { color:var(--color-primary); }
+    .msi-item.done { color:var(--color-secondary); }
+    .msi-arrow { color:#ddd; }
+    .seat-car-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+    .seat-car-tab { padding:5px 14px; border:1.5px solid var(--color-border); border-radius:20px; font-size:0.8rem; cursor:pointer; background:var(--color-bg); color:var(--color-text-light); transition:all 0.15s; }
+    .seat-car-tab:hover { border-color:var(--color-secondary); color:var(--color-secondary); }
+    .seat-car-tab.active { background:var(--color-primary); border-color:var(--color-primary); color:#fff; }
+    .seat-map-container { overflow-x:auto; padding-bottom:4px; }
+    .seat-col-headers { display:flex; align-items:center; margin-bottom:4px; padding-left:28px; gap:3px; }
+    .seat-col-head { width:34px; text-align:center; font-size:0.65rem; font-weight:700; color:#aaa; letter-spacing:0.1em; }
+    .seat-aisle-space { width:14px; }
+    .seat-rows { display:flex; flex-direction:column; gap:3px; }
+    .seat-row { display:flex; align-items:center; gap:3px; }
+    .seat-row-no { width:24px; font-size:0.65rem; color:#bbb; text-align:right; padding-right:4px; flex-shrink:0; }
+    .seat-btn { width:34px; height:38px; border-radius:5px 5px 3px 3px; border:1.5px solid; font-size:0.65rem; font-weight:700; cursor:pointer; transition:transform 0.1s; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
+    .seat-btn::before { content:''; position:absolute; top:-5px; left:5px; right:5px; height:5px; border-radius:3px 3px 0 0; }
+    .seat-btn:not(.taken):hover { transform:translateY(-2px); }
+    .seat-btn.avail { background:#eef5ff; border-color:#7aabdb; color:#1c3a6e; }
+    .seat-btn.avail::before { background:#7aabdb; }
+    .seat-btn.taken { background:#f5f5f5; border-color:#ddd; color:#ccc; cursor:not-allowed; }
+    .seat-btn.taken::before { background:#ddd; }
+    .seat-btn.selected { background:#1c3a6e; border-color:#1c3a6e; color:#fff; }
+    .seat-btn.selected::before { background:#2a4f8a; }
+    .seat-aisle-gap { width:14px; flex-shrink:0; }
+    .seat-legend { display:flex; gap:14px; margin-top:10px; font-size:0.72rem; color:#888; flex-wrap:wrap; }
+    .seat-legend-item { display:flex; align-items:center; gap:5px; }
+    .seat-legend-box { width:13px; height:13px; border-radius:2px; border:1.5px solid; }
+    .seat-sel-info { min-height:22px; font-size:0.82rem; color:var(--color-primary); font-weight:700; margin-top:8px; }
+
+    /* ==================== マルス券風デジタル切符 ==================== */
+    .maruku-wrap { display:flex; justify-content:center; padding:4px 0 16px; }
+    .maruku-ticket {
+      width:440px; max-width:100%; background:linear-gradient(160deg,#fdf8ee 0%,#fdf2e0 100%);
+      border:1.5px solid #c8a86a; border-radius:3px; position:relative;
+      box-shadow:2px 3px 16px rgba(0,0,0,0.18); overflow:hidden;
+      font-family:'Noto Serif JP',serif;
+    }
+    .t-holes { position:absolute; left:0; top:0; bottom:0; width:16px;
+      background:repeating-linear-gradient(180deg,transparent 0,transparent 7px,rgba(200,168,106,0.4) 7px,rgba(200,168,106,0.4) 8px); }
+    .t-holes::after { content:''; position:absolute; right:0; top:0; bottom:0; width:1px; background:#e0c88a; }
+    .t-body { padding:14px 16px 0 24px; }
+    .t-head { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #c8a86a; padding-bottom:10px; margin-bottom:10px; }
+    .t-company { font-size:0.75rem; font-weight:700; color:#5a3e1b; letter-spacing:0.1em; }
+    .t-company-en { font-size:0.58rem; color:#a0845a; letter-spacing:0.2em; }
+    .t-type-name { font-size:0.85rem; font-weight:700; color:#8b1a1a; letter-spacing:0.06em; text-align:right; }
+    .t-validity { font-size:0.6rem; color:#aaa; text-align:right; margin-top:2px; }
+    .t-route { display:flex; align-items:center; justify-content:center; gap:12px; padding:10px 0 12px; border-bottom:1px solid #e8d5ad; }
+    .t-st { text-align:center; }
+    .t-st-name { font-size:1.45rem; font-weight:700; color:#2a1a08; letter-spacing:0.03em; }
+    .t-st-sub { font-size:0.58rem; color:#aaa; letter-spacing:0.1em; margin-top:1px; }
+    .t-arrow { font-size:1.1rem; color:#c8a86a; flex:1; text-align:center; }
+    .t-grid { display:grid; grid-template-columns:1fr 1fr 1fr; border-left:1px solid #e8d5ad; border-top:1px solid #e8d5ad; }
+    .t-cell { border-right:1px solid #e8d5ad; border-bottom:1px solid #e8d5ad; padding:5px 8px; }
+    .t-cell.w2 { grid-column:span 2; }
+    .t-cell.w3 { grid-column:span 3; }
+    .t-cell-label { font-size:0.58rem; color:#aaa; letter-spacing:0.1em; margin-bottom:2px; }
+    .t-cell-val { font-size:0.82rem; font-weight:600; color:#2a1a08; }
+    .t-footer { display:flex; justify-content:space-between; align-items:flex-end; padding:8px 0 12px; border-top:1px dashed #c8a86a; margin-top:4px; }
+    .t-fare-total { font-size:1.15rem; font-weight:700; color:#8b1a1a; }
+    .t-fare-label { font-size:0.6rem; color:#aaa; letter-spacing:0.08em; }
+    .t-no { font-size:0.6rem; font-family:monospace; color:#bbb; letter-spacing:0.05em; text-align:right; }
+    .t-magnetic { height:22px; background:#180e04; margin:0 -16px 0 -24px; display:flex; align-items:center; padding:0 16px 0 24px; }
+    .t-mag-stripe { height:8px; width:100%; background:repeating-linear-gradient(90deg,#2e1a0a 0,#2e1a0a 3px,#180e04 3px,#180e04 5px); border-radius:1px; }
+
+    @media print {
+      body > *:not(#reserve-modal) { display:none !important; }
+      #reserve-modal { position:static !important; background:none !important; padding:0 !important; }
+      .modal-inner { box-shadow:none !important; padding:0 !important; max-width:100% !important; }
+      .modal-close, .modal-step-ind, .modal-summary, #modal-heading,
+      #modal-step-form, #modal-step-seat, #ticket-actions { display:none !important; }
+      #modal-step-ticket { display:block !important; }
+    }
+
     /* ==================== レスポンシブ ==================== */
     @media (max-width: 768px) {
       .search-grid { grid-template-columns: 1fr; }
@@ -394,56 +507,94 @@
       <p class="section-title">列車を検索する</p>
       <span class="section-title-en">Search Trains</span>
 
+      <!-- タブ切り替え -->
+      <div class="search-tabs fade-in">
+        <button class="search-tab active" id="tab-btn-route" onclick="switchSearchTab('route')">区間で検索</button>
+        <button class="search-tab" id="tab-btn-date" onclick="switchSearchTab('date')">日付から探す</button>
+      </div>
+
       <div class="search-box fade-in" style="max-width: 800px;">
 
-        <!-- 出発地・目的地 -->
-        <div class="search-grid">
-          <div>
-            <label for="from-station">出発駅</label>
-            <select id="from-station">
-              <option value="">選択してください</option>
-            </select>
+        <!-- ========== タブ①: 区間検索 ========== -->
+        <div id="tab-route">
+          <!-- 出発地・目的地 -->
+          <div class="search-grid">
+            <div>
+              <label for="from-station">出発駅</label>
+              <select id="from-station">
+                <option value="">選択してください</option>
+              </select>
+            </div>
+            <button class="swap-btn" onclick="swapStations()" title="出発地と目的地を入れ替える">⇄</button>
+            <div>
+              <label for="to-station">到着駅</label>
+              <select id="to-station">
+                <option value="">選択してください</option>
+              </select>
+            </div>
           </div>
-          <button class="swap-btn" onclick="swapStations()" title="出発地と目的地を入れ替える">⇄</button>
-          <div>
-            <label for="to-station">到着駅</label>
-            <select id="to-station">
-              <option value="">選択してください</option>
-            </select>
+
+          <!-- 日付・人数・座席クラス -->
+          <div class="search-sub-grid">
+            <div>
+              <label for="travel-date">乗車日</label>
+              <input type="date" id="travel-date">
+            </div>
+            <div>
+              <label for="passengers">人数</label>
+              <select id="passengers">
+                <option value="1">1名</option>
+                <option value="2">2名</option>
+                <option value="3">3名</option>
+                <option value="4">4名</option>
+                <option value="5">5名</option>
+                <option value="6">6名</option>
+              </select>
+            </div>
+            <div>
+              <label for="seat-class">座席クラス（特急・急行）</label>
+              <select id="seat-class">
+                <option value="general">一般車（乗車券のみ）</option>
+                <option value="free" selected>自由席（二等）</option>
+                <option value="reserved">二等指定席</option>
+                <option value="special">特別車（グリーン指定）</option>
+              </select>
+            </div>
+            <div>
+              <label for="purchase-type">購入種別（特急・急行）</label>
+              <select id="purchase-type">
+                <option value="set"  selected>乗車券＋特急・急行券</option>
+                <option value="supp">特急・急行券のみ</option>
+              </select>
+            </div>
           </div>
+
+          <button class="btn btn-primary" style="width:100%; font-size:0.95rem; padding:14px;" onclick="searchTrains()">
+            列車を検索する
+          </button>
+          <div id="search-alert"></div>
         </div>
 
-        <!-- 日付・人数・座席クラス -->
-        <div class="search-sub-grid">
-          <div>
-            <label for="travel-date">乗車日</label>
-            <input type="date" id="travel-date">
+        <!-- ========== タブ②: 日付検索 ========== -->
+        <div id="tab-date" style="display:none;">
+          <p style="font-size:0.82rem; color:var(--color-text-light); letter-spacing:0.06em; margin-bottom:20px; line-height:1.8;">
+            日付を指定すると、その日に運行されるすべての列車を表示します。
+          </p>
+          <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:8px;">
+            <div style="flex:1; min-width:180px;">
+              <label for="list-date">日付</label>
+              <input type="date" id="list-date">
+            </div>
+            <div style="padding-bottom:0;">
+              <button class="btn btn-primary" style="height:44px; padding:0 28px; font-size:0.95rem; white-space:nowrap;" onclick="displayDateTrains()">
+                この日の列車を表示
+              </button>
+            </div>
           </div>
-          <div>
-            <label for="passengers">人数</label>
-            <select id="passengers">
-              <option value="1">1名</option>
-              <option value="2">2名</option>
-              <option value="3">3名</option>
-              <option value="4">4名</option>
-              <option value="5">5名</option>
-              <option value="6">6名</option>
-            </select>
-          </div>
-          <div>
-            <label for="seat-class">座席クラス</label>
-            <select id="seat-class">
-              <option value="free">自由席</option>
-              <option value="reserve" selected>指定席</option>
-              <option value="green">グリーン車</option>
-            </select>
-          </div>
+          <div id="date-search-alert"></div>
+          <div id="date-train-results" style="margin-top:28px;"></div>
         </div>
 
-        <button class="btn btn-primary" style="width:100%; font-size:0.95rem; padding:14px;" onclick="searchTrains()">
-          列車を検索する
-        </button>
-        <div id="search-alert"></div>
       </div>
 
       <!-- ==================== 検索結果 ==================== -->
@@ -461,6 +612,7 @@
         ご登録のメールアドレスに確認メールをお送りします。<br>
         ご不明な点はお問い合わせください。
       </div>
+
 
     </div>
   </section>
@@ -517,40 +669,60 @@
   <div id="reserve-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
     <div class="modal-inner" style="position:relative;">
       <button class="modal-close" onclick="closeModal()" aria-label="閉じる">×</button>
+
+      <!-- ステップ表示（JS で動的生成） -->
+      <div class="modal-step-ind" id="modal-step-ind"></div>
+
       <p class="modal-title" id="modal-heading">予約内容の確認</p>
       <div class="modal-summary" id="modal-summary"></div>
 
-      <form id="reserve-form" novalidate>
-        <input type="hidden" id="modal-train-id" name="train-id">
-        <input type="hidden" id="modal-fare"     name="fare">
+      <!-- Step 0: 乗降駅選択 (JS で中身を生成) -->
+      <div id="modal-step-stations" style="display:none;"></div>
 
-        <div class="form-group">
-          <label for="res-name">お名前（代表者）<span class="required">＊</span></label>
-          <input type="text" id="res-name" name="name" placeholder="例）山田 太郎" required autocomplete="name">
-        </div>
-        <div class="form-group">
-          <label for="res-name-kana">フリガナ<span class="required">＊</span></label>
-          <input type="text" id="res-name-kana" name="name-kana" placeholder="例）ヤマダ タロウ" required>
-        </div>
-        <div class="form-group">
-          <label for="res-email">メールアドレス<span class="required">＊</span></label>
-          <input type="email" id="res-email" name="email" placeholder="例）info@example.com" required autocomplete="email">
-        </div>
-        <div class="form-group" style="margin-bottom:28px;">
-          <label for="res-tel">電話番号</label>
-          <input type="tel" id="res-tel" name="tel" placeholder="例）000-0000-0000" autocomplete="tel">
-        </div>
+      <!-- Step 1: 座席選択 (JS で中身を生成) -->
+      <div id="modal-step-seat" style="display:none;"></div>
 
-        <div style="font-size:0.78rem; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:20px; line-height:1.9;">
-          ※ 予約完了メールを送信します。迷惑メールフォルダもご確認ください。<br>
-          ※ 本システムはデモ版です。実際の予約は成立しません。
-        </div>
+      <!-- Step 2: 入力フォーム -->
+      <div id="modal-step-form" style="display:none;">
+        <form id="reserve-form" novalidate>
+          <input type="hidden" id="modal-train-id"              name="train-id">
+          <input type="hidden" id="modal-fare"                  name="fare">
+          <input type="hidden" id="modal-charter-pass-expected" name="charter-pass-expected">
 
-        <div style="display:flex; gap:12px;">
-          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeModal()">戻る</button>
-          <button type="submit" class="btn btn-primary" style="flex:2;">予約を確定する</button>
+          <div class="form-group" id="modal-charter-group" style="display:none;">
+            <label for="res-charter-pass">予約パスワード <span class="required">＊</span></label>
+            <input type="password" id="res-charter-pass" name="charter-pass" placeholder="団体専用パスワードを入力してください">
+            <p id="modal-charter-err" style="color:#c0392b; font-size:0.78rem; margin-top:4px; display:none;">パスワードが正しくありません。</p>
+          </div>
+
+          <div class="form-group" style="margin-bottom:28px;">
+            <label for="res-mcid">Minecraft ユーザー名 <span class="required">＊</span></label>
+            <input type="text" id="res-mcid" name="mcid" placeholder="例）Steve" required autocomplete="off"
+              style="letter-spacing:0.04em;">
+            <p style="font-size:0.76rem; color:var(--color-text-light); margin-top:6px; line-height:1.7;">
+              えるりきゅうに登録されている Minecraft ユーザー名を入力してください。
+            </p>
+          </div>
+
+          <div style="font-size:0.78rem; color:var(--color-text-light); letter-spacing:0.05em; margin-bottom:20px; line-height:1.9;">
+            ※ 本システムはデモ版です。実際の予約は成立しません。
+          </div>
+
+          <div style="display:flex; gap:12px;">
+            <button type="button" class="btn btn-outline" style="flex:1;" id="form-back-btn" onclick="closeModal()">戻る</button>
+            <button type="submit" class="btn btn-primary" style="flex:2;">予約を確定する</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 3: デジタル切符 -->
+      <div id="modal-step-ticket" style="display:none;">
+        <div id="digital-ticket"></div>
+        <div id="ticket-actions" style="display:flex; gap:12px; margin-top:20px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn btn-outline" style="padding:10px 24px;" onclick="window.print()">🖨 印刷する</button>
+          <button class="btn btn-primary"  style="padding:10px 24px;" onclick="closeModal()">閉じる</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -598,6 +770,7 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/timetable-data.js"></script>
   <script src="js/reservation.js"></script>
   <script>
     // 路線案内カードを動的生成
@@ -628,5 +801,43 @@
       observer.observe(document.getElementById('search-results'), { childList: true });
     });
   </script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 </body>
 </html>

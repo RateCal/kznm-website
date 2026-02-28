@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時刻表管理システム | eるりきゅう</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg);
+      font-family: 'Noto Serif JP', serif;
+      color: var(--color-text);
+    }
+
+    /* ── HEADER ─────────────────────────────── */
+    .adm-header {
+      background: var(--color-primary);
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+      border-bottom: 3px solid var(--color-accent);
+    }
+    .adm-header-title { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+    .adm-header-sub   { font-size: 0.7rem; opacity: 0.55; margin-bottom: 2px; }
+    .adm-header-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .save-status      { font-size: 0.76rem; color: rgba(255,255,255,0.6); }
+
+    /* ── LAYOUT ─────────────────────────────── */
+    .adm-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── SIDEBAR ─────────────────────────────── */
+    .adm-sidebar {
+      width: 256px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-top {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-top h2 { font-size: 0.83rem; margin: 0; }
+    .sidebar-list { overflow-y: auto; flex: 1; }
+
+    .train-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.1s;
+    }
+    .train-item:hover  { background: var(--color-bg); }
+    .train-item.active { background: #eaf0f9; border-left-color: var(--color-primary); }
+    .train-item-name   { font-size: 0.83rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .train-item-meta   { font-size: 0.71rem; color: var(--color-text-light); margin-top: 3px; }
+
+    .type-pill { display: inline-block; font-size: 0.66rem; padding: 1px 5px; border-radius: 3px; color: #fff; font-weight: 700; }
+
+    /* ── MAIN ─────────────────────────────── */
+    .adm-main { flex: 1; overflow-y: auto; padding: 24px; }
+    .empty-hint { text-align: center; padding: 80px 20px; color: var(--color-text-light); }
+    .empty-hint h3 { margin-bottom: 8px; font-size: 1rem; }
+
+    /* ── EDITOR CARD ─────────────────────────────── */
+    .editor-card { background: #fff; border: 1px solid var(--color-border); border-radius: 8px; padding: 24px; max-width: 800px; }
+    .editor-card > h2 { font-size: 0.93rem; margin: 0 0 18px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+
+    .form-row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+    .form-row2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 14px; }
+    .fgroup    { display: flex; flex-direction: column; gap: 5px; }
+    .fgroup label { font-size: 0.74rem; font-weight: 700; color: var(--color-text-light); letter-spacing: 0.05em; text-transform: uppercase; }
+    .fgroup input[type="text"],
+    .fgroup select {
+      padding: 8px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 0.87rem;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .fgroup input:focus, .fgroup select:focus {
+      outline: none;
+      border-color: var(--color-secondary);
+      box-shadow: 0 0 0 2px rgba(74,143,212,0.12);
+    }
+
+    /* ── STOPS TABLE ─────────────────────────────── */
+    .stops-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
+    .stops-head h3 { font-size: 0.87rem; margin: 0; }
+    .stops-head small { font-size: 0.72rem; color: var(--color-text-light); }
+
+    table.stbl { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .stbl th {
+      padding: 7px 10px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--color-text-light);
+      text-align: left;
+    }
+    .stbl td { padding: 5px 7px; border: 1px solid var(--color-border); vertical-align: middle; }
+    .stbl select,
+    .stbl input[type="time"] {
+      width: 100%;
+      padding: 5px 6px;
+      border: 1px solid var(--color-border);
+      border-radius: 3px;
+      font-size: 0.81rem;
+      font-family: inherit;
+      background: #fff;
+    }
+    .stbl input[type="time"]:disabled { background: #f0f0f0; color: #ccc; border-color: #e4e4e4; }
+    .stbl .ico { background: none; border: none; cursor: pointer; padding: 3px 5px; font-size: 0.88rem; color: #bbb; border-radius: 3px; }
+    .stbl .ico:hover:not(:disabled) { background: var(--color-bg); color: var(--color-primary); }
+    .stbl .ico:disabled { opacity: 0.25; cursor: default; }
+    .stbl .ico.del:hover:not(:disabled) { color: #d03030; background: #fff0f0; }
+
+    .btn-add-stop {
+      margin-top: 8px; width: 100%; padding: 7px;
+      background: none; border: 1.5px dashed var(--color-border);
+      border-radius: 4px; cursor: pointer; font-size: 0.81rem;
+      color: var(--color-text-light); font-family: inherit;
+    }
+    .btn-add-stop:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
+
+    /* ── EDITOR ACTIONS ─────────────────────────────── */
+    .editor-actions {
+      margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--color-border);
+      display: flex; justify-content: flex-end;
+    }
+    .btn-del {
+      padding: 7px 16px; background: none; border: 1px solid #d03030;
+      color: #d03030; border-radius: 4px; cursor: pointer; font-size: 0.81rem; font-family: inherit;
+    }
+    .btn-del:hover { background: #fff0f0; }
+
+    /* ── EXPORT BAR ─────────────────────────────── */
+    .adm-export {
+      flex-shrink: 0; background: #fff; border-top: 1px solid var(--color-border);
+      padding: 9px 18px; display: flex; align-items: center; gap: 9px;
+    }
+    .adm-export .count { font-size: 0.8rem; color: var(--color-text-light); }
+
+    /* ── MODAL ─────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.42); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 8px; padding: 24px;
+      width: 90%; max-width: 520px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-box h3 { margin: 0 0 10px; font-size: 0.93rem; }
+    .modal-box p  { font-size: 0.8rem; color: #777; margin: 0 0 10px; }
+    .modal-box textarea {
+      width: 100%; height: 180px; border: 1px solid var(--color-border);
+      border-radius: 4px; padding: 8px; font-size: 0.78rem; font-family: monospace; resize: vertical;
+    }
+    .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
+    /* ── TOAST ─────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--color-primary); color: #fff;
+      padding: 9px 18px; border-radius: 6px; font-size: 0.8rem;
+      display: none; z-index: 9999; box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+    }
+
+    /* ── DATE CHIPS ─────────────────────────────── */
+    .date-chip { display: inline-flex; align-items: center; gap: 3px; background: #e8eef8; border-radius: 3px; padding: 3px 8px; font-size: 0.77rem; }
+    .date-chip-del { background: none; border: none; cursor: pointer; color: #aaa; padding: 0 2px; line-height: 1; }
+    .date-chip-del:hover { color: #d03030; }
+
+    /* ── TEXTAREA ─────────────────────────────── */
+    .fgroup textarea {
+      padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 4px;
+      font-size: 0.87rem; font-family: inherit; transition: border-color 0.15s;
+    }
+    .fgroup textarea:focus { outline: none; border-color: var(--color-secondary); box-shadow: 0 0 0 2px rgba(74,143,212,0.12); }
+
+    /* ── CAR CONFIG TABLE ─────────────────────────────── */
+    .cars-head { display:flex; align-items:center; justify-content:space-between; margin:22px 0 8px; flex-wrap:wrap; gap:8px; }
+    .cars-head h3 { font-size:0.87rem; margin:0; }
+    .template-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:8px 10px; background:var(--color-bg); border-radius:4px; margin-bottom:8px; }
+    .template-bar > span { font-size:0.74rem; font-weight:700; color:var(--color-text-light); white-space:nowrap; }
+    .template-bar select { padding:4px 7px; border:1px solid var(--color-border); border-radius:3px; font-size:0.79rem; font-family:inherit; flex:1; min-width:100px; }
+    table.cartbl { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .cartbl th { padding:7px 10px; background:var(--color-bg); border:1px solid var(--color-border); font-size:0.73rem; font-weight:700; color:var(--color-text-light); text-align:left; }
+    .cartbl td { padding:5px 7px; border:1px solid var(--color-border); vertical-align:middle; }
+    .cartbl input, .cartbl select { width:100%; padding:5px 6px; border:1px solid var(--color-border); border-radius:3px; font-size:0.81rem; font-family:inherit; background:#fff; }
+    .btn-add-car { margin-top:8px; width:100%; padding:7px; background:none; border:1.5px dashed var(--color-border); border-radius:4px; cursor:pointer; font-size:0.81rem; color:var(--color-text-light); font-family:inherit; }
+    .btn-add-car:hover { border-color:var(--color-secondary); color:var(--color-secondary); }
+
+    /* ── ADMIN TAB SWITCHER ─────────────────────────────── */
+    .adm-tabs { display:flex; background:#fff; border-bottom:2px solid var(--color-border); flex-shrink:0; }
+    .adm-tab { padding:8px 22px; border:none; border-bottom:2px solid transparent; background:none; cursor:pointer; font-size:0.82rem; font-family:inherit; color:var(--color-text-light); letter-spacing:0.05em; transition:color 0.15s; margin-bottom:-2px; }
+    .adm-tab.active { color:var(--color-primary); border-bottom-color:var(--color-primary); font-weight:700; }
+    .adm-tab:hover:not(.active) { color:var(--color-primary); }
+
+    /* ── RESERVATION VIEW ─────────────────────────────── */
+    .adm-resv-view { display:none; flex:1; overflow-y:auto; padding:20px 24px; flex-direction:column; }
+    .adm-resv-view.show { display:flex; }
+    .resv-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    .resv-toolbar h2 { font-size:0.95rem; margin:0; }
+    .resv-toolbar input { padding:5px 10px; border:1px solid var(--color-border); border-radius:4px; font-size:0.82rem; font-family:inherit; min-width:180px; }
+    table.resv-table { width:100%; border-collapse:collapse; font-size:0.8rem; background:#fff; }
+    .resv-table th { padding:8px 10px; background:var(--color-bg); border:1px solid var(--color-border); font-size:0.71rem; font-weight:700; color:var(--color-text-light); text-align:left; white-space:nowrap; }
+    .resv-table td { padding:7px 10px; border:1px solid var(--color-border); vertical-align:middle; }
+    .resv-table tbody tr:hover td { background:#f4f8ff; }
+
+    /* ── GITHUB PANEL ─────────────────────────────── */
+    .gh-panel { display:none; background:#f8f9fc; border-top:1px solid var(--color-border); padding:10px 18px; }
+    .gh-panel.open { display:block; }
+    .gh-panel h4 { font-size:0.8rem; margin:0 0 8px; color:var(--color-primary); }
+    .gh-form { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+    .gh-sync-mode { display:flex; gap:14px; align-items:center; margin-top:8px; font-size:0.78rem; }
+    .gh-sync-mode label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+    .gh-form .fgroup { flex:1; min-width:120px; }
+    .gh-form .fgroup label { font-size:0.72rem; }
+    .gh-form .fgroup input { padding:6px 8px; font-size:0.82rem; }
+    .gh-sync-btn { padding:7px 16px; font-size:0.8rem; white-space:nowrap; }
+    .gh-sync-btn.syncing { opacity:0.6; pointer-events:none; }
+
+    @media (max-width: 700px) {
+      .adm-sidebar { display: none; }
+      .form-row3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="adm-header">
+    <div>
+      <div class="adm-header-sub">京華風の芽 旅客運輸部門</div>
+      <div class="adm-header-title">eるりきゅう 時刻表管理システム</div>
+    </div>
+    <div class="adm-header-right">
+      <span class="save-status" id="save-status">—</span>
+      <a href="reservation.html" style="color:#9dc0f0; font-size:0.76rem; text-decoration:none;">← 予約ページへ</a>
+    </div>
+  </div>
+
+  <!-- TAB SWITCHER -->
+  <div class="adm-tabs">
+    <button class="adm-tab active" id="tab-timetable" onclick="switchAdmTab('timetable')">🚆 時刻表管理</button>
+    <button class="adm-tab" id="tab-reservations" onclick="switchAdmTab('reservations')">📋 予約一覧</button>
+  </div>
+
+  <!-- BODY -->
+  <div class="adm-body" id="adm-body">
+
+    <!-- SIDEBAR -->
+    <aside class="adm-sidebar">
+      <div class="sidebar-top">
+        <h2>列車一覧</h2>
+        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.76rem;" onclick="newTrain()">＋ 新規</button>
+      </div>
+      <div class="sidebar-list" id="train-list"></div>
+    </aside>
+
+    <!-- MAIN EDITOR -->
+    <main class="adm-main" id="adm-main">
+      <div class="empty-hint" id="empty-hint">
+        <h3>列車を選択してください</h3>
+        <p>左のリストから選ぶか、「＋ 新規」で追加してください。</p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- GITHUB SETTINGS PANEL -->
+  <div class="gh-panel" id="gh-panel">
+    <h4>⚙ GitHub 同期設定</h4>
+    <div class="gh-form">
+      <div class="fgroup">
+        <label>オーナー名</label>
+        <input type="text" id="gh-owner" placeholder="例: RateCal" oninput="saveGhConfig()">
+      </div>
+      <div class="fgroup">
+        <label>リポジトリ名</label>
+        <input type="text" id="gh-repo" placeholder="例: kznm-website" oninput="saveGhConfig()">
+      </div>
+      <div class="fgroup" style="flex:0.5; min-width:72px;">
+        <label>ブランチ</label>
+        <input type="text" id="gh-branch" placeholder="main" oninput="saveGhConfig()">
+      </div>
+      <div class="fgroup" style="flex:2;">
+        <label>Personal Access Token (repo スコープ必要)</label>
+        <input type="password" id="gh-pat" placeholder="ghp_xxxxxxxxxxxx" oninput="saveGhConfig()">
+      </div>
+    </div>
+    <p style="font-size:0.72rem; color:#aaa; margin:6px 0 0;">PAT は localStorage に保存されます。公共端末での使用は避けてください。</p>
+    <div class="gh-sync-mode">
+      <span style="color:var(--color-text-light);">自動同期：</span>
+      <label><input type="radio" name="gh-autosync" value="always" onchange="saveGhConfig()"> 常時（変更時に自動）</label>
+      <label><input type="radio" name="gh-autosync" value="off" checked onchange="saveGhConfig()"> 停止</label>
+    </div>
+  </div>
+
+  <!-- EXPORT BAR -->
+  <div class="adm-export" id="adm-export">
+    <span class="count" id="train-count">登録: 0本</span>
+    <button class="btn btn-outline" style="padding:6px 13px; font-size:0.8rem;" onclick="openImport()">📂 インポート</button>
+    <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+      <button class="btn btn-outline" style="padding:6px 13px; font-size:0.8rem;" onclick="copyCode()">コードをコピー</button>
+      <button class="btn btn-primary" style="padding:6px 16px; font-size:0.8rem;" onclick="exportFile()">📥 ダウンロード</button>
+      <button class="btn btn-primary gh-sync-btn" id="gh-sync-btn" onclick="syncToGitHub()" style="background:#2ea44f; border-color:#2ea44f;">🔄 GitHub に同期</button>
+      <button class="btn btn-outline" style="padding:6px 9px; font-size:0.8rem;" onclick="toggleGhPanel()" title="GitHub設定">⚙</button>
+    </div>
+  </div>
+
+  <!-- IMPORT MODAL -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal-box">
+      <h3>📂 データのインポート</h3>
+      <p>以前エクスポートした <code>timetable-data.js</code> の内容をそのまま貼り付けるか、<br>JSON 形式（<code>{"trains":[...]}</code>）で入力してください。</p>
+      <textarea id="import-ta" placeholder='const TIMETABLE = { "trains": [...] };'></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-outline" style="padding:7px 14px; font-size:0.81rem;" onclick="closeImport()">キャンセル</button>
+        <button class="btn btn-primary" style="padding:7px 14px; font-size:0.81rem;" onclick="doImport()">インポートする</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESERVATION VIEW -->
+  <div class="adm-resv-view" id="adm-resv-view">
+    <div class="resv-toolbar">
+      <div style="flex:1;">
+        <h2>予約一覧</h2>
+        <p id="resv-count" style="font-size:0.77rem; color:var(--color-text-light); margin:3px 0 0;"></p>
+      </div>
+      <input type="text" id="resv-filter" placeholder="MCIDで絞り込み…" oninput="renderReservations()">
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="renderReservations()">↻ 更新</button>
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem; color:#d03030; border-color:#d03030;" onclick="clearAllReservations()">全件削除</button>
+    </div>
+    <div id="resv-list" style="overflow-x:auto;"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+// =============================================================================
+// 駅データ（reservation.js の STATION_REGISTRY と同一内容を保つこと）
+// =============================================================================
+const STATION_REGISTRY = {
+  'A1': { name: '瑠璃松島',     numbered: true  },
+  'A2': { name: '下松市',       numbered: true  },
+  'A3': { name: '氷城',         numbered: true  },
+  'A4': { name: '青乃鹿',       numbered: true  },
+  'A5': { name: '新雪見野',     numbered: true  },
+  'A6': { name: '落合もみじ口', numbered: true  },
+  'A7': { name: '紡乃市',       numbered: true  },
+  'A8': { name: '新紡乃',       numbered: true  },
+  'B1': { name: '東灘台',       numbered: true  },
+  'B2': { name: '石塚大泉',     numbered: true  },
+  'B3': { name: '西都',         numbered: true  },
+  'B4': { name: '新々都心',     numbered: true  },
+  'C1': { name: '帯の花',       numbered: true  },
+  'C2': { name: '落合新花島',   numbered: true  },
+  'Y01': { name: '川越',        numbered: false },
+  'Y02': { name: '楓高野台',    numbered: false },
+  'X01': { name: '新渋谷',      numbered: false },
+};
+
+// =============================================================================
+// ストレージ
+// =============================================================================
+const STORAGE_KEY = 'kznm-timetable-v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return { trains: [] };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const t = new Date();
+  document.getElementById('save-status').textContent =
+    `保存済み ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+  _scheduleAutoSync();
+}
+
+let state = loadState();
+let currentId = null;
+
+// =============================================================================
+// タブ切り替え
+// =============================================================================
+function switchAdmTab(tab) {
+  document.querySelectorAll('.adm-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  const isTimetable = tab === 'timetable';
+  document.getElementById('adm-body').style.display     = isTimetable ? 'flex' : 'none';
+  document.getElementById('gh-panel').style.display     = isTimetable ? '' : 'none !important'; // let .open class control when timetable
+  document.getElementById('adm-export').style.display   = isTimetable ? '' : 'none';
+  document.getElementById('adm-resv-view').style.display = isTimetable ? 'none' : 'flex';
+  if (!isTimetable) {
+    // gh-panel を強制非表示（inline styleで上書き）
+    document.getElementById('gh-panel').style.display = 'none';
+    renderReservations();
+  } else {
+    document.getElementById('gh-panel').style.display = '';
+  }
+}
+
+// =============================================================================
+// 予約一覧
+// =============================================================================
+const RESV_KEY = 'kznm-reservations-v1';
+
+function getReservations() {
+  try {
+    const raw = localStorage.getItem(RESV_KEY);
+    return raw ? (JSON.parse(raw).reservations || []) : [];
+  } catch { return []; }
+}
+
+function _extractTypeFromLabel(typeLabel) {
+  const lbl = typeLabel || '';
+  if (lbl.includes('特急'))         return 'express';
+  if (lbl.includes('特別快速'))     return 'special-rapid';
+  if (lbl.includes('ﾎﾘﾃﾞｰ') || lbl.includes('ホリデー')) return 'holiday-rapid';
+  if (lbl.includes('団体'))         return 'charter';
+  return 'rapid';
+}
+
+function renderReservations() {
+  const filter = (document.getElementById('resv-filter')?.value || '').toLowerCase();
+  const all    = getReservations();
+  const list   = filter ? all.filter(r => (r.mcid||'').toLowerCase().includes(filter) || (r.id||'').toLowerCase().includes(filter)) : all;
+
+  const countEl = document.getElementById('resv-count');
+  if (countEl) countEl.textContent = `${list.length}件${filter ? '（絞り込み中）' : ''}　計 ${all.length} 件`;
+
+  const container = document.getElementById('resv-list');
+  if (!container) return;
+
+  if (!list.length) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#bbb;">
+      <p style="font-size:1.5rem;margin-bottom:8px;">📭</p>
+      <p style="font-size:0.85rem;">${all.length > 0 ? '絞り込み結果がありません' : '予約データがまだありません'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = `<table class="resv-table">
+    <thead><tr>
+      <th>発行日時</th>
+      <th>切符 No.</th>
+      <th>Minecraft ID</th>
+      <th>乗車日</th>
+      <th>列車</th>
+      <th>区間</th>
+      <th>時刻</th>
+      <th>座席</th>
+      <th>人数</th>
+      <th style="text-align:right;">運賃</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+      ${list.map(r => {
+        const typeColor = adminTypeInfo(_extractTypeFromLabel(r.typeLabel)).color;
+        const issued = new Date(r.issuedAt).toLocaleString('ja-JP',{hour12:false}).slice(0,16);
+        return `<tr>
+          <td style="white-space:nowrap;font-size:0.74rem;color:#aaa;">${esc(issued)}</td>
+          <td style="font-family:monospace;font-size:0.73rem;color:#999;">${esc(r.id)}</td>
+          <td style="font-weight:700;">${esc(r.mcid)}</td>
+          <td style="white-space:nowrap;">${esc(r.date)}</td>
+          <td style="white-space:nowrap;">
+            <span style="font-size:0.68rem;color:#fff;background:${typeColor};padding:1px 6px;border-radius:2px;">${esc(r.typeLabel)}</span>
+            ${r.trainNo ? `<span style="font-size:0.74rem;color:#aaa;"> ${esc(r.trainNo)}号</span>` : ''}
+            ${r.trainName ? `<br><span style="font-size:0.77rem;">${esc(r.trainName)}</span>` : ''}
+          </td>
+          <td style="white-space:nowrap;">${esc(r.fromName)}&nbsp;→&nbsp;${esc(r.toName)}</td>
+          <td style="font-family:monospace;font-size:0.86rem;white-space:nowrap;">${esc(r.depTime)}&nbsp;→&nbsp;${esc(r.arrTime)}</td>
+          <td style="font-size:0.78rem;">${esc(r.seat || r.seatLabel || '—')}</td>
+          <td style="text-align:center;">${r.pax}名</td>
+          <td style="text-align:right;font-weight:700;">¥${(r.fare||0).toLocaleString()}</td>
+          <td><button class="ico del" onclick="deleteReservation('${esc(r.id)}')" title="削除">✕</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function deleteReservation(id) {
+  try {
+    const raw = localStorage.getItem(RESV_KEY);
+    if (!raw) return;
+    const store = JSON.parse(raw);
+    store.reservations = store.reservations.filter(r => r.id !== id);
+    localStorage.setItem(RESV_KEY, JSON.stringify(store));
+    renderReservations();
+    showToast('予約を1件削除しました');
+  } catch { }
+}
+
+function clearAllReservations() {
+  const all = getReservations();
+  if (!all.length) { showToast('予約データがありません'); return; }
+  if (!confirm(`全 ${all.length} 件の予約データを削除しますか？この操作は取り消せません。`)) return;
+  localStorage.removeItem(RESV_KEY);
+  renderReservations();
+  showToast('全件削除しました');
+}
+
+// =============================================================================
+// サイドバー：列車一覧
+// =============================================================================
+function renderSidebar() { renderList(); }
+
+function renderList() {
+  const el = document.getElementById('train-list');
+  document.getElementById('train-count').textContent = `登録: ${state.trains.length}本`;
+
+  if (state.trains.length === 0) {
+    el.innerHTML = '<p style="padding:14px;font-size:0.78rem;color:#bbb;">列車がありません</p>';
+    return;
+  }
+
+  el.innerHTML = state.trains.map(t => {
+    const first = t.stops[0];
+    const last  = t.stops[t.stops.length - 1];
+    const time  = (first && first.dep)
+      ? first.dep + (last && last.arr ? ' → ' + last.arr : '')
+      : '時刻未設定';
+    return `
+      <div class="train-item${t.id === currentId ? ' active' : ''}" onclick="selectTrain('${t.id}')">
+        <div class="train-item-name">
+          <span class="type-pill" style="background:${adminTypeInfo(t.type).color};">${adminTypeInfo(t.type).label}</span>
+          ${t.trainNo ? `<span style="font-size:0.7rem;color:#999;">${esc(t.trainNo)}</span>` : ''}
+          ${esc(t.name || '（名称未設定）')}
+        </div>
+        <div class="train-item-meta">
+          ${t.reserveOpen ? '<span style="color:#1a7a3a;font-weight:700;">● 予約受付中</span>&emsp;' : '<span style="color:#aaa;">○ 受付停止</span>&emsp;'}${dayLabel(t.runDays)}&emsp;${t.stops.length}駅&emsp;${time}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// =============================================================================
+// 列車の選択 / 新規 / 削除
+// =============================================================================
+function selectTrain(id) {
+  currentId = id;
+  renderList();
+  renderEditor();
+}
+
+function newTrain() {
+  const id = 'train-' + Date.now();
+  state.trains.push({ id, type: 'rapid', trainNo: '', name: '', runDays: 'daily', notice: '', charterPass: '', reserveOpen: false, cars: [], stops: [] });
+  saveState();
+  selectTrain(id);
+}
+
+function deleteTrain() {
+  if (!currentId) return;
+  const t = state.trains.find(x => x.id === currentId);
+  const label = t ? (t.name || '名称未設定') : '';
+  if (!confirm(`「${label}」を削除しますか？`)) return;
+  state.trains = state.trains.filter(x => x.id !== currentId);
+  currentId = null;
+  saveState();
+  renderList();
+  document.getElementById('adm-main').innerHTML =
+    '<div class="empty-hint"><h3>削除しました</h3></div>';
+}
+
+function currentTrain() {
+  return state.trains.find(t => t.id === currentId) || null;
+}
+
+// =============================================================================
+// エディタ描画
+// =============================================================================
+function renderEditor() {
+  const t = currentTrain();
+  if (!t) return;
+
+  const isSpecific  = Array.isArray(t.runDays);
+  const recurVal    = isSpecific ? 'specific' : (t.runDays || 'daily');
+  const dateChipsHtml = isSpecific
+    ? t.runDays.map(d => `<span class="date-chip">${esc(d)}<button class="date-chip-del" onclick="removeDate('${esc(d)}')">✕</button></span>`).join('')
+    : '';
+
+  document.getElementById('adm-main').innerHTML = `
+    <div class="editor-card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--color-border);">
+        <h2 style="margin:0; font-size:0.93rem;">列車情報の編集</h2>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span id="reserve-status-badge" style="font-size:0.78rem; font-weight:700; letter-spacing:0.06em; padding:4px 12px; border-radius:20px; ${t.reserveOpen ? 'background:#d4f0dc; color:#1a7a3a;' : 'background:#f0f0f0; color:#999;'}">
+            ${t.reserveOpen ? '● 予約受付中' : '○ 受付停止中'}
+          </span>
+          <button id="reserve-toggle-btn" class="btn" style="font-size:0.8rem; padding:5px 16px; ${t.reserveOpen ? 'background:#c0392b; border-color:#c0392b; color:#fff;' : 'background:#1a7a3a; border-color:#1a7a3a; color:#fff;'}" onclick="toggleReserveOpen()">
+            ${t.reserveOpen ? '予約を〆切る' : '予約を解放する'}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row3">
+        <div class="fgroup">
+          <label>種別</label>
+          <select id="f-type" onchange="setField('type', this.value); toggleCharterPass(this.value);">
+            <option value="rapid"          ${t.type==='rapid'          ? 'selected' : ''}>急行</option>
+            <option value="express"        ${t.type==='express'        ? 'selected' : ''}>特急</option>
+            <option value="special-rapid"  ${t.type==='special-rapid'  ? 'selected' : ''}>特別快速</option>
+            <option value="holiday-rapid"  ${t.type==='holiday-rapid'  ? 'selected' : ''}>ホリデー快速</option>
+            <option value="charter"        ${t.type==='charter'        ? 'selected' : ''}>臨時（団体）</option>
+          </select>
+        </div>
+        <div class="fgroup">
+          <label>列車番号</label>
+          <input type="text" id="f-trainno" value="${esc(t.trainNo||'')}" placeholder="例: 1001"
+            oninput="setField('trainNo', this.value)">
+        </div>
+        <div class="fgroup">
+          <label>列車名</label>
+          <input type="text" id="f-name" value="${esc(t.name)}" placeholder="例: 急行 紡乃1号"
+            oninput="setField('name', this.value)">
+        </div>
+      </div>
+
+      <div class="form-row2" id="charter-pass-row" style="align-items:flex-start; margin-bottom:14px; display:${t.type==='charter' ? 'grid' : 'none'};">
+        <div class="fgroup">
+          <label>予約パスワード（団体専用）</label>
+          <input type="text" id="f-charter-pass" value="${esc(t.charterPass||'')}" placeholder="乗客に通知するパスワードを設定"
+            oninput="setField('charterPass', this.value)" autocomplete="off">
+        </div>
+        <div class="fgroup" style="display:flex; align-items:flex-end; padding-bottom:2px;">
+          <p style="font-size:0.76rem; color:var(--color-text-light); line-height:1.7; margin:0;">
+            設定したパスワードを正しく入力した乗客のみ予約できます。<br>
+            空欄の場合はパスワードなしで予約可能です。
+          </p>
+        </div>
+      </div>
+
+      <div class="form-row2" style="align-items:flex-start; margin-bottom:14px;">
+        <div class="fgroup">
+          <label>運転日</label>
+          <select id="f-days-type" onchange="onRunDaysTypeChange(this.value)">
+            <option value="daily"    ${recurVal==='daily'    ? 'selected' : ''}>毎日</option>
+            <option value="weekday"  ${recurVal==='weekday'  ? 'selected' : ''}>平日のみ</option>
+            <option value="weekend"  ${recurVal==='weekend'  ? 'selected' : ''}>休日のみ</option>
+            <option value="specific" ${recurVal==='specific' ? 'selected' : ''}>指定日</option>
+          </select>
+        </div>
+        <div class="fgroup" id="f-specific-wrap" style="display:${isSpecific?'flex':'none'}; flex-direction:column; gap:6px;">
+          <label>&nbsp;</label>
+          <div style="display:flex; gap:6px;">
+            <input type="date" id="f-date-add">
+            <button class="btn btn-outline" style="padding:5px 10px; font-size:0.79rem; white-space:nowrap;" onclick="addDate()">＋ 追加</button>
+          </div>
+          <div id="f-date-chips" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;">
+            ${dateChipsHtml}
+          </div>
+        </div>
+      </div>
+
+      <div class="fgroup" style="margin-bottom:20px;">
+        <label>乗客への注意事項（任意）</label>
+        <textarea id="f-notice" rows="3" placeholder="例: 混雑時は自由席をお断りする場合があります。"
+          oninput="setField('notice', this.value)">${esc(t.notice||'')}</textarea>
+      </div>
+
+      <div class="stops-head">
+        <h3>停車駅・時刻</h3>
+        <small>始発は「着」なし、終着は「発」なし</small>
+      </div>
+
+      <table class="stbl">
+        <thead>
+          <tr>
+            <th style="width:32px;">#</th>
+            <th>駅</th>
+            <th style="width:120px;">着 時刻</th>
+            <th style="width:120px;">発 時刻</th>
+            <th style="width:88px;"></th>
+          </tr>
+        </thead>
+        <tbody>${renderStops(t.stops)}</tbody>
+      </table>
+      <button class="btn-add-stop" onclick="addStop()">＋ 停車駅を追加</button>
+
+      <div class="cars-head">
+        <h3>編成・座席設定</h3>
+        <small style="color:var(--color-text-light);">号車・座席クラス・定員</small>
+      </div>
+      <div class="template-bar">
+        <span>テンプレート</span>
+        <select id="f-tmpl">
+          <option value="">— 選択 —</option>
+          ${getTemplates().map(tp => `<option value="${esc(tp.name)}">${esc(tp.name)}</option>`).join('')}
+        </select>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:0.77rem;white-space:nowrap;" onclick="loadTemplate()">読み込む</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:0.77rem;white-space:nowrap;" onclick="saveTemplate()">この編成を保存</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:0.77rem;white-space:nowrap;color:#d03030;border-color:#d03030;" onclick="deleteTemplate()">削除</button>
+      </div>
+      <table class="cartbl">
+        <thead>
+          <tr>
+            <th style="width:54px;">号車</th>
+            <th>座席クラス</th>
+            <th style="width:78px;">定員数</th>
+            <th>位置メモ</th>
+            <th style="width:72px;"></th>
+          </tr>
+        </thead>
+        <tbody>${renderCars(t.cars||[])}</tbody>
+      </table>
+      <button class="btn-add-car" onclick="addCar()">＋ 号車を追加</button>
+
+      <div class="editor-actions">
+        <button class="btn-del" onclick="deleteTrain()">🗑 この列車を削除</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderStops(stops) {
+  if (stops.length === 0) {
+    return '<tr><td colspan="5" style="text-align:center;padding:18px;color:#bbb;font-size:0.8rem;">停車駅がありません</td></tr>';
+  }
+
+  return stops.map((s, i) => {
+    const isFirst = i === 0;
+    const isLast  = i === stops.length - 1;
+    const opts = Object.entries(STATION_REGISTRY).map(([code, st]) =>
+      `<option value="${code}"${s.code===code?' selected':''}>${st.name}${st.numbered?' ['+code+']':''}</option>`
+    ).join('');
+    return `
+      <tr>
+        <td style="text-align:center;color:#ccc;font-size:0.74rem;">${i + 1}</td>
+        <td><select onchange="setStop(${i},'code',this.value)">${opts}</select></td>
+        <td><input type="time" value="${s.arr||''}"
+          ${isFirst ? 'disabled' : ''}
+          onchange="setStop(${i},'arr',this.value||null)"></td>
+        <td><input type="time" value="${s.dep||''}"
+          ${isLast ? 'disabled' : ''}
+          onchange="setStop(${i},'dep',this.value||null)"></td>
+        <td style="text-align:center;white-space:nowrap;">
+          <button class="ico" onclick="moveStop(${i},-1)" ${isFirst?'disabled':''} title="上へ">↑</button>
+          <button class="ico" onclick="moveStop(${i}, 1)" ${isLast ?'disabled':''} title="下へ">↓</button>
+          <button class="ico del" onclick="removeStop(${i})" title="削除">✕</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// =============================================================================
+// データ操作
+// =============================================================================
+function setField(key, val) {
+  const t = currentTrain();
+  if (!t) return;
+  t[key] = val;
+  saveState();
+  renderList();
+}
+
+function setStop(idx, key, val) {
+  const t = currentTrain();
+  if (!t) return;
+  t.stops[idx][key] = val || null;
+  saveState();
+}
+
+function addStop() {
+  const t = currentTrain();
+  if (!t) return;
+  t.stops.push({ code: 'A1', arr: null, dep: null });
+  saveState();
+  renderEditor();
+}
+
+function removeStop(idx) {
+  const t = currentTrain();
+  if (!t) return;
+  t.stops.splice(idx, 1);
+  saveState();
+  renderEditor();
+}
+
+function moveStop(idx, dir) {
+  const t = currentTrain();
+  if (!t) return;
+  const j = idx + dir;
+  if (j < 0 || j >= t.stops.length) return;
+  [t.stops[idx], t.stops[j]] = [t.stops[j], t.stops[idx]];
+  saveState();
+  renderEditor();
+}
+
+// =============================================================================
+// エクスポート / インポート
+// =============================================================================
+function buildCode() {
+  const now = new Date().toLocaleString('ja-JP');
+  const data = { trains: state.trains };
+  return `// js/timetable-data.js\n// eるりきゅう 時刻表管理システム 出力 ${now}\n// ※ 手動編集より管理システム (admin.html) の使用を推奨します。\n\nconst TIMETABLE = ${JSON.stringify(data, null, 2)};\n`;
+}
+
+function exportFile() {
+  const blob = new Blob([buildCode()], { type: 'text/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'timetable-data.js';
+  a.click();
+  showToast('timetable-data.js をダウンロードしました');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(buildCode())
+    .then(() => showToast('コードをクリップボードにコピーしました'));
+}
+
+function openImport() {
+  document.getElementById('import-ta').value = '';
+  document.getElementById('import-modal').classList.add('open');
+}
+
+function closeImport() {
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+function doImport() {
+  const text = document.getElementById('import-ta').value.trim();
+  try {
+    let data;
+    if (text.startsWith('{')) {
+      // 生 JSON
+      data = JSON.parse(text);
+    } else {
+      // JS ファイル形式
+      const m = text.match(/const\s+TIMETABLE\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+      if (!m) throw new Error('形式が認識できません。出力ファイルをそのまま貼り付けるか、JSON 形式で入力してください。');
+      data = JSON.parse(m[1]);
+    }
+    if (!Array.isArray(data.trains)) throw new Error('trains データが見つかりません。');
+    state = data;
+    saveState();
+    currentId = null;
+    renderList();
+    closeImport();
+    document.getElementById('adm-main').innerHTML =
+      `<div class="empty-hint"><h3>インポート完了</h3><p>${state.trains.length}本の列車を読み込みました。左のリストから選んでください。</p></div>`;
+    showToast(`${state.trains.length}本をインポートしました`);
+  } catch (e) {
+    alert('インポートに失敗しました:\n' + e.message);
+  }
+}
+
+// =============================================================================
+// ユーティリティ
+// =============================================================================
+function dayLabel(d) {
+  if (Array.isArray(d)) {
+    if (d.length === 0) return '指定日なし';
+    if (d.length === 1) return d[0];
+    return `${d.length}日間（指定）`;
+  }
+  return d === 'weekday' ? '平日' : d === 'weekend' ? '休日' : '毎日';
+}
+
+function onRunDaysTypeChange(val) {
+  const t = currentTrain();
+  if (!t) return;
+  const wrap = document.getElementById('f-specific-wrap');
+  if (val === 'specific') {
+    wrap.style.display = 'flex';
+    if (!Array.isArray(t.runDays)) { t.runDays = []; saveState(); }
+  } else {
+    wrap.style.display = 'none';
+    t.runDays = val;
+    saveState();
+    renderList();
+  }
+}
+
+function addDate() {
+  const t = currentTrain();
+  if (!t || !Array.isArray(t.runDays)) return;
+  const input = document.getElementById('f-date-add');
+  const date  = input.value;
+  if (!date) { showToast('日付を選択してください'); return; }
+  if (t.runDays.includes(date)) { showToast('すでに追加されています'); return; }
+  t.runDays.push(date);
+  t.runDays.sort();
+  saveState();
+  renderList();
+  document.getElementById('f-date-chips').innerHTML =
+    t.runDays.map(d => `<span class="date-chip">${esc(d)}<button class="date-chip-del" onclick="removeDate('${d}')">✕</button></span>`).join('');
+  input.value = '';
+}
+
+function removeDate(date) {
+  const t = currentTrain();
+  if (!t || !Array.isArray(t.runDays)) return;
+  t.runDays = t.runDays.filter(d => d !== date);
+  saveState();
+  renderList();
+  document.getElementById('f-date-chips').innerHTML =
+    t.runDays.map(d => `<span class="date-chip">${esc(d)}<button class="date-chip-del" onclick="removeDate('${d}')">✕</button></span>`).join('');
+}
+
+// =============================================================================
+// 編成・座席 CRUD
+// =============================================================================
+function renderCars(cars) {
+  if (!cars || cars.length === 0) {
+    return '<tr><td colspan="5" style="text-align:center;padding:14px;color:#bbb;font-size:0.8rem;">号車が設定されていません</td></tr>';
+  }
+  return cars.map((c, i) => `
+    <tr>
+      <td><input type="number" min="1" max="99" value="${c.carNo||i+1}" style="text-align:center;" onchange="setCar(${i},'carNo',+this.value)"></td>
+      <td>
+        <select onchange="setCar(${i},'seatClass',this.value)">
+          <option value="general"  ${c.seatClass==='general'  ?'selected':''}>一般車</option>
+          <option value="free"     ${c.seatClass==='free'     ?'selected':''}>自由席（二等）</option>
+          <option value="reserved" ${c.seatClass==='reserved' ?'selected':''}>二等指定席</option>
+          <option value="special"  ${c.seatClass==='special'  ?'selected':''}>特別車</option>
+        </select>
+      </td>
+      <td><input type="number" min="0" max="999" value="${c.seats||0}" style="text-align:center;" onchange="setCar(${i},'seats',+this.value)"></td>
+      <td><input type="text" value="${esc(c.note||'')}" placeholder="例: 禁煙・前寄り" oninput="setCar(${i},'note',this.value)"></td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button class="ico" onclick="moveCar(${i},-1)" ${i===0?'disabled':''} title="上へ">↑</button>
+        <button class="ico" onclick="moveCar(${i}, 1)" ${i===cars.length-1?'disabled':''} title="下へ">↓</button>
+        <button class="ico del" onclick="removeCar(${i})" title="削除">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function addCar() {
+  const t = currentTrain(); if (!t) return;
+  if (!t.cars) t.cars = [];
+  t.cars.push({ carNo: t.cars.length + 1, seatClass: 'reserved', seats: 56, note: '' });
+  saveState(); renderEditor();
+}
+function removeCar(idx) {
+  const t = currentTrain(); if (!t || !t.cars) return;
+  t.cars.splice(idx, 1); saveState(); renderEditor();
+}
+function moveCar(idx, dir) {
+  const t = currentTrain(); if (!t || !t.cars) return;
+  const j = idx + dir; if (j < 0 || j >= t.cars.length) return;
+  [t.cars[idx], t.cars[j]] = [t.cars[j], t.cars[idx]]; saveState(); renderEditor();
+}
+function setCar(idx, key, val) {
+  const t = currentTrain(); if (!t || !t.cars) return;
+  t.cars[idx][key] = val; saveState();
+}
+
+// =============================================================================
+// テンプレート管理
+// =============================================================================
+const TMPL_KEY = 'kznm-car-templates';
+function getTemplates() {
+  try { return JSON.parse(localStorage.getItem(TMPL_KEY)) || []; } catch { return []; }
+}
+function saveTemplate() {
+  const t = currentTrain(); if (!t) return;
+  const cars = t.cars || [];
+  if (cars.length === 0) { showToast('号車が設定されていません'); return; }
+  const name = prompt('テンプレート名を入力してください:', t.name || '');
+  if (!name || !name.trim()) return;
+  const nm = name.trim();
+  const list = getTemplates();
+  const idx  = list.findIndex(tp => tp.name === nm);
+  const entry = { name: nm, cars: JSON.parse(JSON.stringify(cars)) };
+  if (idx >= 0) { if (!confirm(`「${nm}」を上書きしますか？`)) return; list[idx] = entry; }
+  else list.push(entry);
+  localStorage.setItem(TMPL_KEY, JSON.stringify(list));
+  showToast(`「${nm}」を保存しました`); renderEditor();
+}
+function loadTemplate() {
+  const t = currentTrain(); if (!t) return;
+  const sel = document.getElementById('f-tmpl');
+  if (!sel || !sel.value) { showToast('テンプレートを選択してください'); return; }
+  const tp = getTemplates().find(tp => tp.name === sel.value); if (!tp) return;
+  if (!confirm(`現在の編成を「${tp.name}」で上書きしますか？`)) return;
+  t.cars = JSON.parse(JSON.stringify(tp.cars));
+  saveState(); renderEditor(); showToast(`「${tp.name}」を読み込みました`);
+}
+function deleteTemplate() {
+  const sel = document.getElementById('f-tmpl');
+  if (!sel || !sel.value) { showToast('テンプレートを選択してください'); return; }
+  if (!confirm(`「${sel.value}」を削除しますか？`)) return;
+  localStorage.setItem(TMPL_KEY, JSON.stringify(getTemplates().filter(tp => tp.name !== sel.value)));
+  showToast('テンプレートを削除しました'); renderEditor();
+}
+
+// =============================================================================
+// GitHub 一括同期
+// =============================================================================
+
+// 同期対象ファイル（timetable-data.js は動的生成のため別扱い）
+const SITE_FILES = [
+  'index.html', 'about.html', 'contact.html', 'news.html',
+  'privacy.html', 'services.html', 'reservation.html', 'admin.html',
+  'css/style.css',
+  'js/main.js', 'js/reservation.js',
+  'images/favicon.svg', 'images/placeholder.svg',
+  'images/arlate.jpg', 'images/japan.gif', 'images/palau.png', 'images/taiwan.png',
+];
+
+// ArrayBuffer → base64（大きいファイル対応）
+function _toBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+let _autoSyncTimer = null;
+
+function _scheduleAutoSync() {
+  const radio = document.querySelector('input[name="gh-autosync"]:checked');
+  if (!radio || radio.value !== 'always') return;
+  clearTimeout(_autoSyncTimer);
+  _autoSyncTimer = setTimeout(() => syncToGitHub(true), 2000);
+}
+
+function toggleGhPanel() {
+  document.getElementById('gh-panel').classList.toggle('open');
+}
+function saveGhConfig() {
+  localStorage.setItem('gh-owner',  document.getElementById('gh-owner').value.trim());
+  localStorage.setItem('gh-repo',   document.getElementById('gh-repo').value.trim());
+  localStorage.setItem('gh-branch', document.getElementById('gh-branch').value.trim() || 'main');
+  localStorage.setItem('gh-pat',    document.getElementById('gh-pat').value.trim());
+  const checked = document.querySelector('input[name="gh-autosync"]:checked');
+  localStorage.setItem('gh-autosync', checked ? checked.value : 'off');
+}
+function loadGhConfig() {
+  const el = (id) => document.getElementById(id);
+  el('gh-owner').value  = localStorage.getItem('gh-owner')  || '';
+  el('gh-repo').value   = localStorage.getItem('gh-repo')   || '';
+  el('gh-branch').value = localStorage.getItem('gh-branch') || 'main';
+  el('gh-pat').value    = localStorage.getItem('gh-pat')    || '';
+  const saved = localStorage.getItem('gh-autosync') || 'off';
+  const radio = document.querySelector(`input[name="gh-autosync"][value="${saved}"]`);
+  if (radio) radio.checked = true;
+}
+
+async function syncToGitHub(isAuto = false) {
+  const owner  = localStorage.getItem('gh-owner')  || '';
+  const repo   = localStorage.getItem('gh-repo')   || '';
+  const branch = localStorage.getItem('gh-branch') || 'main';
+  const pat    = localStorage.getItem('gh-pat')    || '';
+  if (!owner || !repo || !pat) {
+    if (!isAuto) {
+      document.getElementById('gh-panel').classList.add('open');
+      showToast('GitHub設定を入力してください');
+    }
+    return;
+  }
+
+  const btn      = document.getElementById('gh-sync-btn');
+  const statusEl = document.getElementById('save-status');
+  const setStatus = (msg) => isAuto ? (statusEl.textContent = msg) : (btn.textContent = msg);
+
+  if (!isAuto) btn.classList.add('syncing');
+  setStatus('接続中...');
+
+  const h = {
+    'Authorization': `token ${pat}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    // 1. HEAD コミット取得
+    const refRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`, { headers: h });
+    if (!refRes.ok) throw new Error(`ブランチ "${branch}" が見つかりません（${refRes.status}）`);
+    const baseCommitSha = (await refRes.json()).object.sha;
+
+    // 2. ベースツリー SHA 取得
+    const cRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/commits/${baseCommitSha}`, { headers: h });
+    const baseTreeSha = (await cRes.json()).tree.sha;
+
+    // 3. 各ファイルを fetch して blob 作成
+    const allPaths = ['js/timetable-data.js', ...SITE_FILES];
+    const treeItems = [];
+    let done = 0;
+
+    for (const path of allPaths) {
+      setStatus(`ファイル処理中… ${++done} / ${allPaths.length}`);
+      try {
+        let b64;
+        if (path === 'js/timetable-data.js') {
+          // 時刻表データは localStorage から動的生成
+          b64 = _toBase64(new TextEncoder().encode(buildCode()).buffer);
+        } else {
+          const res = await fetch(path);
+          if (!res.ok) continue; // 存在しないファイルはスキップ
+          b64 = _toBase64(await res.arrayBuffer());
+        }
+        const blobRes = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/git/blobs`,
+          { method: 'POST', headers: h, body: JSON.stringify({ content: b64, encoding: 'base64' }) }
+        );
+        if (!blobRes.ok) continue;
+        treeItems.push({ path, mode: '100644', type: 'blob', sha: (await blobRes.json()).sha });
+      } catch { /* ファイルが存在しない場合はスキップ */ }
+    }
+
+    if (treeItems.length === 0) throw new Error('同期できるファイルがありませんでした');
+
+    // 4. 新しいツリーを作成
+    setStatus('コミット作成中...');
+    const treeRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees`,
+      { method: 'POST', headers: h, body: JSON.stringify({ base_tree: baseTreeSha, tree: treeItems }) }
+    );
+    const newTreeSha = (await treeRes.json()).sha;
+
+    // 5. コミットを作成
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/commits`,
+      { method: 'POST', headers: h, body: JSON.stringify({
+        message: `サイト一括更新 (${treeItems.length}ファイル) [admin ${new Date().toLocaleString('ja-JP')}]`,
+        tree: newTreeSha,
+        parents: [baseCommitSha],
+      })}
+    );
+    const newCommitSha = (await commitRes.json()).sha;
+
+    // 6. ブランチ参照を更新
+    const updateRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`,
+      { method: 'PATCH', headers: h, body: JSON.stringify({ sha: newCommitSha }) }
+    );
+    if (!updateRes.ok) throw new Error('ブランチの更新に失敗しました');
+
+    const t = new Date();
+    if (isAuto) {
+      statusEl.textContent =
+        `GitHub同期済み ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')} (${treeItems.length}件)`;
+    } else {
+      showToast(`${treeItems.length}ファイルを GitHub に同期しました！`);
+    }
+  } catch (e) {
+    if (isAuto) {
+      statusEl.textContent = 'GitHub同期失敗';
+    } else {
+      alert('同期に失敗しました:\n' + e.message);
+    }
+  } finally {
+    if (!isAuto) { btn.textContent = '🔄 GitHub に同期'; btn.classList.remove('syncing'); }
+  }
+}
+
+function adminTypeInfo(type) {
+  const map = {
+    express:          { label: '特急',        color: '#1c3a6e' },
+    rapid:            { label: '急行',        color: '#4a7ab5' },
+    'special-rapid':  { label: '特別快速',    color: '#1a6b4a' },
+    'holiday-rapid':  { label: 'ﾎﾘﾃﾞｰ快速',  color: '#c27b08' },
+    charter:          { label: '臨時（団体）', color: '#7b3fa0' },
+  };
+  return map[type] || { label: type, color: '#888' };
+}
+
+function toggleCharterPass(type) {
+  const row = document.getElementById('charter-pass-row');
+  if (row) row.style.display = type === 'charter' ? 'grid' : 'none';
+}
+
+function toggleReserveOpen() {
+  const t = currentTrain();
+  if (!t) return;
+  t.reserveOpen = !t.reserveOpen;
+  saveState();
+  // バッジとボタンをその場で更新
+  const badge = document.getElementById('reserve-status-badge');
+  const btn   = document.getElementById('reserve-toggle-btn');
+  if (badge) {
+    badge.textContent = t.reserveOpen ? '● 予約受付中' : '○ 受付停止中';
+    badge.style.cssText = `font-size:0.78rem; font-weight:700; letter-spacing:0.06em; padding:4px 12px; border-radius:20px; ${t.reserveOpen ? 'background:#d4f0dc; color:#1a7a3a;' : 'background:#f0f0f0; color:#999;'}`;
+  }
+  if (btn) {
+    btn.textContent = t.reserveOpen ? '予約を〆切る' : '予約を解放する';
+    btn.style.cssText = `font-size:0.8rem; padding:5px 16px; ${t.reserveOpen ? 'background:#c0392b; border-color:#c0392b; color:#fff;' : 'background:#1a7a3a; border-color:#1a7a3a; color:#fff;'}`;
+  }
+  renderSidebar();
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+
+// =============================================================================
+// 初期化
+// =============================================================================
+renderList();
+loadGhConfig();
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>
