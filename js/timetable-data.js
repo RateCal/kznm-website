@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/2/28 13:37:52
+// eるりきゅう 時刻表管理システム 出力 2026/2/28 13:41:16
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -9,7 +9,8 @@ const TIMETABLE = {
       "type": "rapid",
       "name": "田所 810号",
       "runDays": [
-        "2026-02-27"
+        "2026-02-27",
+        "2026-02-28"
       ],
       "stops": [
         {
@@ -24,7 +25,33 @@ const TIMETABLE = {
         }
       ],
       "notice": "下北沢へは参りませんので、ご注意ください。",
-      "trainNo": "9810A"
+      "trainNo": "9810A",
+      "cars": [
+        {
+          "carNo": 1,
+          "seatClass": "general",
+          "seats": 16,
+          "note": ""
+        },
+        {
+          "carNo": 2,
+          "seatClass": "general",
+          "seats": 16,
+          "note": ""
+        },
+        {
+          "carNo": 3,
+          "seatClass": "general",
+          "seats": 16,
+          "note": ""
+        },
+        {
+          "carNo": 4,
+          "seatClass": "reserved",
+          "seats": 16,
+          "note": ""
+        }
+      ]
     }
   ]
 };
