@@ -293,6 +293,7 @@ function setMinDate() {
 
 // ==================== 検索実行 ====================
 function searchTrains() {
+  _syncTimetableFromStorage(); // 常に最新データで検索
   const fromCode     = document.getElementById('from-station').value;
   const toCode       = document.getElementById('to-station').value;
   const date         = document.getElementById('travel-date').value;
@@ -494,6 +495,7 @@ function trainServesRoute(train, fromCode, toCode) {
 
 // ==================== 日付別 運行一覧 ====================
 function displayDateTrains() {
+  _syncTimetableFromStorage(); // 常に最新データで表示
   const dateInput = document.getElementById('list-date');
   const container = document.getElementById('date-train-results');
   const alertEl   = document.getElementById('date-search-alert');
@@ -1218,17 +1220,29 @@ function closeModal() {
 }
 
 // ==================== 初期化 ====================
-document.addEventListener('DOMContentLoaded', () => {
-  // admin.html の localStorage データを優先読み込み
+
+// localStorage の最新データを TIMETABLE に反映（検索ごとに呼ぶ）
+function _syncTimetableFromStorage() {
   try {
     const raw = localStorage.getItem('kznm-timetable-v1');
-    if (raw) {
-      const stored = JSON.parse(raw);
-      if (Array.isArray(stored.trains) && stored.trains.length > 0) {
-        TIMETABLE.trains = stored.trains;
-      }
+    if (!raw) return;
+    const stored = JSON.parse(raw);
+    if (!Array.isArray(stored.trains) || stored.trains.length === 0) return;
+    if (typeof TIMETABLE === 'undefined') {
+      window.TIMETABLE = stored; // ファイルが存在しない場合
+    } else {
+      TIMETABLE.trains = stored.trains;
     }
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  _syncTimetableFromStorage(); // 初期ロード時
+
+  // admin が別タブで変更したとき即時反映
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'kznm-timetable-v1') _syncTimetableFromStorage();
+  });
 
   populateStationSelects();
   setMinDate();
