@@ -1216,12 +1216,15 @@ async function syncToGitHub() {
     );
     const newCommitSha = (await commitRes.json()).sha;
 
-    // 6. ブランチ参照を更新
+    // 6. ブランチ参照を更新（force: true で非 fast-forward でも強制更新）
     const updateRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`,
-      { method: 'PATCH', headers: h, body: JSON.stringify({ sha: newCommitSha }) }
+      { method: 'PATCH', headers: h, body: JSON.stringify({ sha: newCommitSha, force: true }) }
     );
-    if (!updateRes.ok) throw new Error('ブランチの更新に失敗しました');
+    if (!updateRes.ok) {
+      const errBody = await updateRes.json().catch(() => ({}));
+      throw new Error(`ブランチの更新に失敗しました (${updateRes.status}): ${errBody.message || ''}`);
+    }
 
     showToast(`${treeItems.length}ファイルを GitHub に同期しました！`);
   } catch (e) {

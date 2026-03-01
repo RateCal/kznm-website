@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/1 17:06:06
+// eるりきゅう 時刻表管理システム 出力 2026/3/1 17:08:16
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -59,7 +59,9 @@ const TIMETABLE = {
       "type": "charter",
       "trainNo": "9951",
       "name": "修学旅行",
-      "runDays": [],
+      "runDays": [
+        "2026-03-01"
+      ],
       "notice": "",
       "charterPass": "0050",
       "cars": [],
@@ -74,7 +76,20 @@ const TIMETABLE = {
           "arr": "09:13",
           "dep": null
         }
-      ]
+      ],
+      "reserveOpen": true
+    },
+    {
+      "id": "train-1772352469901",
+      "type": "rapid",
+      "trainNo": "",
+      "name": "",
+      "runDays": "daily",
+      "notice": "",
+      "charterPass": "",
+      "reserveOpen": false,
+      "cars": [],
+      "stops": []
     }
   ]
 };
