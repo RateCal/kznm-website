@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/1 17:15:16
+// eるりきゅう 時刻表管理システム 出力 2026/3/1 17:15:33
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -104,7 +104,7 @@ const TIMETABLE = {
         {
           "code": "A1",
           "arr": "09:36",
-          "dep": null
+          "dep": "09:38"
         },
         {
           "code": "A4",
