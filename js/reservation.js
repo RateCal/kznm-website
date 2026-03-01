@@ -1110,15 +1110,9 @@ async function _pushReservationsToGitHub() {
     branch: localStorage.getItem('gh-branch') || 'main',
     pat:    localStorage.getItem('gh-pat')    || '',
   };
-  if (!cfg.owner || !cfg.repo || !cfg.pat) return; // 設定なしはスキップ
+  if (!cfg.owner || !cfg.repo || !cfg.pat) return { ok: false, msg: 'config_missing' };
 
   const raw = localStorage.getItem(RESV_STORAGE_KEY) || '{"reservations":[]}';
-  // UTF-8 対応 base64
-  const bytes = new TextEncoder().encode(raw);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  const b64 = btoa(binary);
-
   const path    = 'data/reservations.json';
   const headers = {
     'Authorization': `token ${cfg.pat}`,
@@ -1126,15 +1120,51 @@ async function _pushReservationsToGitHub() {
     'Content-Type': 'application/json',
   };
   try {
+    // 既存ファイルの sha + GitHub 上の予約データを取得
     const getRes = await fetch(
-      `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, { headers });
-    const sha  = getRes.ok ? (await getRes.json()).sha : undefined;
-    const body = { message: '予約データ更新', content: b64 };
+      `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${cfg.branch}`, { headers });
+    let sha;
+    let ghReservations = [];
+    if (getRes.ok) {
+      const ghData = await getRes.json();
+      sha = ghData.sha;
+      try {
+        const ghJson = decodeURIComponent(
+          atob(ghData.content.replace(/\n/g, ''))
+            .split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2,'0')).join('')
+        );
+        ghReservations = JSON.parse(ghJson).reservations || [];
+      } catch { /* パース失敗は無視 */ }
+    }
+    // ローカルとGitHubのデータをマージ（IDで重複排除、ローカル優先）
+    const localReservations = (() => {
+      try { return JSON.parse(raw).reservations || []; } catch { return []; }
+    })();
+    const merged = new Map();
+    ghReservations.forEach(r => merged.set(r.id, r));
+    localReservations.forEach(r => merged.set(r.id, r));
+    const combined = [...merged.values()].sort((a, b) =>
+      (b.issuedAt || '').localeCompare(a.issuedAt || '')
+    );
+    const mergedJson = JSON.stringify({ reservations: combined });
+    const mergedBytes = new TextEncoder().encode(mergedJson);
+    let mergedBinary = '';
+    for (let i = 0; i < mergedBytes.byteLength; i++) mergedBinary += String.fromCharCode(mergedBytes[i]);
+    const mergedB64 = btoa(mergedBinary);
+
+    const body = { message: '予約データ更新', content: mergedB64, branch: cfg.branch };
     if (sha) body.sha = sha;
-    await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+    const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
       method: 'PUT', headers, body: JSON.stringify(body),
     });
-  } catch { /* 失敗しても予約処理は継続 */ }
+    if (!putRes.ok) {
+      const err = await putRes.json().catch(() => ({}));
+      return { ok: false, msg: err.message || `HTTP ${putRes.status}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, msg: e.message };
+  }
 }
 
 // ── チケット生成 ──────────────────────────────────────────
@@ -1291,8 +1321,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const ticketNo = 'RU' + Date.now().toString().slice(-8) + String(Math.floor(Math.random()*100)).padStart(2,'0');
       document.getElementById('digital-ticket').innerHTML = _generateTicket(data, _selectedSeat, mcid, ticketNo);
       _saveReservation(data, _selectedSeat, mcid, ticketNo);
-      _pushReservationsToGitHub(); // GitHub に非同期で push（失敗しても予約は完了）
       _showModalStep('ticket');
+      // GitHub に非同期で push してステータス表示
+      const ghStatusEl = document.getElementById('gh-sync-status');
+      if (ghStatusEl) {
+        ghStatusEl.style.cssText = 'display:block; margin-top:12px; padding:8px 14px; border-radius:6px; font-size:0.78rem; text-align:center; background:#f5f5f5; color:#888;';
+        ghStatusEl.textContent = '⏳ 予約データをサーバーに送信中...';
+      }
+      _pushReservationsToGitHub().then(result => {
+        if (!ghStatusEl) return;
+        if (!result || result.msg === 'config_missing') {
+          ghStatusEl.style.display = 'none';
+        } else if (result.ok) {
+          ghStatusEl.style.cssText = 'display:block; margin-top:12px; padding:8px 14px; border-radius:6px; font-size:0.78rem; text-align:center; background:#d4f0dc; color:#1a7a3a;';
+          ghStatusEl.textContent = '✓ 予約データをサーバーに送信しました';
+        } else {
+          ghStatusEl.style.cssText = 'display:block; margin-top:12px; padding:8px 14px; border-radius:6px; font-size:0.78rem; text-align:center; background:#fef3f3; color:#c0392b;';
+          ghStatusEl.textContent = '⚠ サーバー同期に失敗しました: ' + result.msg;
+        }
+      });
     });
   }
 

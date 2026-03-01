@@ -350,7 +350,7 @@
         <p id="resv-count" style="font-size:0.77rem; color:var(--color-text-light); margin:3px 0 0;"></p>
       </div>
       <input type="text" id="resv-filter" placeholder="MCIDで絞り込み…" oninput="renderReservations()">
-      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="_fetchReservationsFromGitHub().then(()=>renderReservations())">↻ GitHub から更新</button>
+      <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="_fetchReservationsFromGitHub(this).then(()=>renderReservations())">↻ GitHub から更新</button>
       <button class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem; color:#d03030; border-color:#d03030;" onclick="clearAllReservations()">全件削除</button>
     </div>
     <div id="resv-list" style="overflow-x:auto;"></div>
@@ -421,7 +421,7 @@ function switchAdmTab(tab) {
   if (!isTimetable) {
     // gh-panel を強制非表示（inline styleで上書き）
     document.getElementById('gh-panel').style.display = 'none';
-    _fetchReservationsFromGitHub().then(() => renderReservations());
+    _fetchReservationsFromGitHub(null).then(() => renderReservations());
   } else {
     document.getElementById('gh-panel').style.display = '';
   }
@@ -433,24 +433,44 @@ function switchAdmTab(tab) {
 const RESV_KEY = 'kznm-reservations-v1';
 
 // GitHub から data/reservations.json を取得して localStorage に反映
-async function _fetchReservationsFromGitHub() {
-  const owner = localStorage.getItem('gh-owner') || '';
-  const repo  = localStorage.getItem('gh-repo')  || '';
-  const pat   = localStorage.getItem('gh-pat')   || '';
-  if (!owner || !repo || !pat) return;
+async function _fetchReservationsFromGitHub(btn) {
+  const owner  = localStorage.getItem('gh-owner')  || '';
+  const repo   = localStorage.getItem('gh-repo')   || '';
+  const pat    = localStorage.getItem('gh-pat')    || '';
+  const branch = localStorage.getItem('gh-branch') || 'main';
+  if (!owner || !repo || !pat) { showToast('GitHub設定が未入力です'); return; }
+
+  if (btn) { btn.textContent = '取得中...'; btn.disabled = true; }
   try {
     const headers = { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' };
     const res = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/data/reservations.json`, { headers });
-    if (!res.ok) return;
+      `https://api.github.com/repos/${owner}/${repo}/contents/data/reservations.json?ref=${branch}`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast('GitHub取得失敗: ' + (err.message || `HTTP ${res.status}`));
+      return;
+    }
     const data = await res.json();
-    // GitHub API はコンテンツを base64 で返す
     const json = decodeURIComponent(
       atob(data.content.replace(/\n/g, ''))
         .split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2,'0')).join('')
     );
-    localStorage.setItem(RESV_KEY, json);
-  } catch { /* 取得失敗は無視 */ }
+    // GitHub データとローカルデータをマージ（IDで重複排除、GitHub優先）
+    const ghReservations = (JSON.parse(json).reservations || []);
+    const localReservations = getReservations();
+    const merged = new Map();
+    localReservations.forEach(r => merged.set(r.id, r));
+    ghReservations.forEach(r => merged.set(r.id, r)); // GitHubが新しいので上書き
+    const combined = [...merged.values()].sort((a, b) =>
+      (b.issuedAt || '').localeCompare(a.issuedAt || '')
+    );
+    localStorage.setItem(RESV_KEY, JSON.stringify({ reservations: combined }));
+    showToast(`✓ ${ghReservations.length}件取得 (合計${combined.length}件)`);
+  } catch (e) {
+    showToast('GitHub取得エラー: ' + e.message);
+  } finally {
+    if (btn) { btn.textContent = '↻ GitHub から更新'; btn.disabled = false; }
+  }
 }
 
 function getReservations() {
