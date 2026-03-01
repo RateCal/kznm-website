@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/1 17:05:09
+// eるりきゅう 時刻表管理システム 出力 2026/3/1 17:06:04
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -52,7 +52,7 @@ const TIMETABLE = {
           "note": "車内は禁煙です。喫煙室をご利用ください。"
         }
       ],
-      "reserveOpen": true
+      "reserveOpen": false
     },
     {
       "id": "train-1772262134376",
