@@ -634,6 +634,7 @@ function renderEditor() {
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--color-border);">
         <h2 style="margin:0; font-size:0.93rem;">列車情報の編集</h2>
         <div style="display:flex; align-items:center; gap:10px;">
+          <button id="train-sync-btn" class="btn btn-outline" style="font-size:0.78rem; padding:5px 13px; background:#2ea44f; border-color:#2ea44f; color:#fff;" onclick="syncThisTrain(this)">🔄 時刻表を同期</button>
           <span id="reserve-status-badge" style="font-size:0.78rem; font-weight:700; letter-spacing:0.06em; padding:4px 12px; border-radius:20px; ${t.reserveOpen ? 'background:#d4f0dc; color:#1a7a3a;' : 'background:#f0f0f0; color:#999;'}">
             ${t.reserveOpen ? '● 予約受付中' : '○ 受付停止中'}
           </span>
@@ -676,6 +677,24 @@ function renderEditor() {
           <p style="font-size:0.76rem; color:var(--color-text-light); line-height:1.7; margin:0;">
             設定したパスワードを正しく入力した乗客のみ予約できます。<br>
             空欄の場合はパスワードなしで予約可能です。
+          </p>
+        </div>
+      </div>
+
+      <div class="form-row3" id="charter-supplement-row" style="margin-bottom:14px; display:${t.type==='charter' ? 'grid' : 'none'};">
+        <div class="fgroup">
+          <label>料金・基本額 (¥)</label>
+          <input type="number" id="f-suppl-base" value="${t.supplement?.base ?? 800}" min="0" step="50"
+            oninput="setNestedField('supplement','base', parseInt(this.value)||0)">
+        </div>
+        <div class="fgroup">
+          <label>料金・割引額 (¥)</label>
+          <input type="number" id="f-suppl-discount" value="${t.supplement?.discount ?? 600}" min="0" step="50"
+            oninput="setNestedField('supplement','discount', parseInt(this.value)||0)">
+        </div>
+        <div class="fgroup" style="display:flex; align-items:flex-end; padding-bottom:2px;">
+          <p style="font-size:0.76rem; color:var(--color-text-light); line-height:1.7; margin:0;">
+            特急券のみ購入時は割引額、乗車券セットは基本額を使用します。
           </p>
         </div>
       </div>
@@ -1245,9 +1264,55 @@ function adminTypeInfo(type) {
   return map[type] || { label: type, color: '#888' };
 }
 
+// 列車単体（時刻表データのみ）を GitHub に同期
+async function syncThisTrain(btn) {
+  const owner  = localStorage.getItem('gh-owner')  || '';
+  const repo   = localStorage.getItem('gh-repo')   || '';
+  const pat    = localStorage.getItem('gh-pat')    || '';
+  if (!owner || !repo || !pat) {
+    document.getElementById('gh-panel').classList.add('open');
+    showToast('GitHub設定を入力してください'); return;
+  }
+  const orig = btn.textContent;
+  btn.textContent = '同期中...'; btn.disabled = true;
+
+  const path    = 'js/timetable-data.js';
+  const b64     = _toBase64(new TextEncoder().encode(buildCode()).buffer);
+  const headers = { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  try {
+    const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { headers });
+    const sha    = getRes.ok ? (await getRes.json()).sha : undefined;
+    const body   = { message: `時刻表を更新 [admin ${new Date().toLocaleString('ja-JP')}]`, content: b64 };
+    if (sha) body.sha = sha;
+    const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT', headers, body: JSON.stringify(body),
+    });
+    if (putRes.ok) {
+      btn.textContent = '✓ 同期完了';
+      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+    } else {
+      const err = await putRes.json().catch(() => ({}));
+      alert('同期に失敗しました:\n' + (err.message || putRes.status));
+      btn.textContent = orig; btn.disabled = false;
+    }
+  } catch (e) {
+    alert('同期に失敗しました:\n' + e.message);
+    btn.textContent = orig; btn.disabled = false;
+  }
+}
+
 function toggleCharterPass(type) {
-  const row = document.getElementById('charter-pass-row');
-  if (row) row.style.display = type === 'charter' ? 'grid' : 'none';
+  const row  = document.getElementById('charter-pass-row');
+  const supRow = document.getElementById('charter-supplement-row');
+  if (row)    row.style.display    = type === 'charter' ? 'grid' : 'none';
+  if (supRow) supRow.style.display = type === 'charter' ? 'grid' : 'none';
+}
+
+function setNestedField(parent, key, val) {
+  const t = currentTrain(); if (!t) return;
+  if (!t[parent] || typeof t[parent] !== 'object') t[parent] = {};
+  t[parent][key] = val;
+  saveState();
 }
 
 function toggleReserveOpen() {

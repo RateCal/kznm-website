@@ -174,12 +174,13 @@ const SEAT_CLASSES = [
 ];
 
 // 座席クラスと列車種別から特急・急行料金を算出
-function calcSupplement(trainType, seatClass) {
-  const sup = SUPPLEMENTS[trainType];
+// trainObj.supplement があれば優先（臨時列車の自由設定）
+function calcSupplement(trainType, seatClass, trainObj) {
+  const sup = (trainObj && trainObj.supplement) || SUPPLEMENTS[trainType];
   if (!sup || seatClass.supplement === 'none') return 0;
-  if (seatClass.supplement === 'discount') return sup.discount;
-  if (seatClass.supplement === 'base')     return sup.base;
-  if (seatClass.supplement === 'special')  return sup.base + SPECIAL_CAR_FEE;
+  if (seatClass.supplement === 'discount') return sup.discount ?? 0;
+  if (seatClass.supplement === 'base')     return sup.base ?? 0;
+  if (seatClass.supplement === 'special')  return (sup.base ?? 0) + SPECIAL_CAR_FEE;
   return 0;
 }
 
@@ -351,7 +352,7 @@ function searchTrains() {
       const arrTime   = train.stops[ti].arr || '—';
       const stopCountT = ti - fi;
       const baseFare  = calcLocalFare(stopCountT);
-      const suppl     = calcSupplement(train.type, seatInfo);
+      const suppl     = calcSupplement(train.type, seatInfo, train);
 
       let fareTotal;
       if (seatInfo.supplement === 'none') {
@@ -975,7 +976,7 @@ function _updateStationFare() {
   const stopCount = ti - fi;
   const baseFare  = calcLocalFare(stopCount);
   const seatInfo  = SEAT_CLASSES.find(s => s.id === seatId) || SEAT_CLASSES[0];
-  const suppl     = calcSupplement(train.type, seatInfo);
+  const suppl     = calcSupplement(train.type, seatInfo, train);
   const fareTotal = seatInfo.supplement === 'none'
     ? baseFare * pax
     : (baseFare + suppl) * pax;
