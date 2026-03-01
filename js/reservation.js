@@ -1236,13 +1236,25 @@ function _syncTimetableFromStorage() {
   } catch { /* ignore */ }
 }
 
+// 2秒ごとに localStorage を監視 → 変化があれば表示中の結果を自動再描画
+let _ttSnap = null;
+function _pollTimetable() {
+  const raw = localStorage.getItem('kznm-timetable-v1');
+  if (raw === _ttSnap) return; // 変化なし
+  _ttSnap = raw;
+  if (!raw) return;
+  _syncTimetableFromStorage();
+  // 表示中の検索結果があれば再描画
+  const sr = document.getElementById('search-results');
+  const dr = document.getElementById('date-train-results');
+  if (sr && sr.querySelector('.train-card')) searchTrains();
+  else if (dr && dr.querySelector('.train-card')) displayDateTrains();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   _syncTimetableFromStorage(); // 初期ロード時
-
-  // admin が別タブで変更したとき即時反映
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'kznm-timetable-v1') _syncTimetableFromStorage();
-  });
+  _ttSnap = localStorage.getItem('kznm-timetable-v1'); // 初期スナップ
+  setInterval(_pollTimetable, 2000); // 2秒ごとに監視
 
   populateStationSelects();
   setMinDate();
