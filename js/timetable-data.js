@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/2 16:04:54
+// eるりきゅう 時刻表管理システム 出力 2026/3/3 21:06:48
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -129,12 +129,107 @@ const TIMETABLE = {
       "type": "rapid",
       "trainNo": "",
       "name": "",
-      "runDays": "daily",
+      "runDays": [],
       "notice": "",
       "charterPass": "",
       "reserveOpen": false,
       "cars": [],
       "stops": []
+    },
+    {
+      "id": "train-1772539039741",
+      "type": "rapid",
+      "trainNo": "9091",
+      "name": "夜行急行 はなしま 1号",
+      "runDays": "weekday",
+      "notice": "控え車での就寝は、お気に召さない可能性が大いにございます。",
+      "charterPass": "",
+      "reserveOpen": false,
+      "cars": [
+        {
+          "carNo": 1,
+          "seatClass": "special",
+          "seats": 13,
+          "note": "A寝台二段"
+        },
+        {
+          "carNo": 2,
+          "seatClass": "special",
+          "seats": 13,
+          "note": "A寝台二段"
+        },
+        {
+          "carNo": 3,
+          "seatClass": "reserved",
+          "seats": 24,
+          "note": "B寝台三段"
+        },
+        {
+          "carNo": 4,
+          "seatClass": "reserved",
+          "seats": 24,
+          "note": "B寝台三段"
+        },
+        {
+          "carNo": 5,
+          "seatClass": "reserved",
+          "seats": 21,
+          "note": "B寝台三段"
+        },
+        {
+          "carNo": 6,
+          "seatClass": "free",
+          "seats": 30,
+          "note": "控え座席車"
+        }
+      ],
+      "stops": [
+        {
+          "code": "Y02",
+          "arr": null,
+          "dep": "22:38"
+        },
+        {
+          "code": "Y01",
+          "arr": "22:43",
+          "dep": "22:45"
+        },
+        {
+          "code": "A1",
+          "arr": "23:27",
+          "dep": "23:29"
+        },
+        {
+          "code": "A4",
+          "arr": "23:41",
+          "dep": "23:45"
+        },
+        {
+          "code": "B1",
+          "arr": "00:01",
+          "dep": "00:03"
+        },
+        {
+          "code": "A4",
+          "arr": "00:28",
+          "dep": "05:48"
+        },
+        {
+          "code": "A5",
+          "arr": "05:52",
+          "dep": "05:56"
+        },
+        {
+          "code": "A6",
+          "arr": "06:18",
+          "dep": "06:21"
+        },
+        {
+          "code": "A7",
+          "arr": "06:28",
+          "dep": null
+        }
+      ]
     }
   ]
 };
