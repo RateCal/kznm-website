@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/3 21:06:48
+// eるりきゅう 時刻表管理システム 出力 2026/3/4 16:17:13
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -144,7 +144,7 @@ const TIMETABLE = {
       "runDays": "weekday",
       "notice": "控え車での就寝は、お気に召さない可能性が大いにございます。",
       "charterPass": "",
-      "reserveOpen": false,
+      "reserveOpen": true,
       "cars": [
         {
           "carNo": 1,
