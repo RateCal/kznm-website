@@ -619,6 +619,20 @@ function newTrain() {
   selectTrain(id);
 }
 
+function copyTrain() {
+  if (!currentId) return;
+  const src = currentTrain();
+  if (!src) return;
+  const id = 'train-' + Date.now();
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = id;
+  copy.name = (copy.name || '名称未設定') + ' (コピー)';
+  state.trains.push(copy);
+  saveState();
+  selectTrain(id);
+  showToast('列車をコピーしました');
+}
+
 function deleteTrain() {
   if (!currentId) return;
   const t = state.trains.find(x => x.id === currentId);
@@ -654,6 +668,7 @@ function renderEditor() {
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--color-border);">
         <h2 style="margin:0; font-size:0.93rem;">列車情報の編集</h2>
         <div style="display:flex; align-items:center; gap:10px;">
+          <button class="btn btn-outline" style="font-size:0.78rem; padding:5px 13px;" onclick="copyTrain()">📋 コピーして編集</button>
           <button id="train-sync-btn" class="btn btn-outline" style="font-size:0.78rem; padding:5px 13px; background:#2ea44f; border-color:#2ea44f; color:#fff;" onclick="syncThisTrain(this)">🔄 時刻表を同期</button>
           <span id="reserve-status-badge" style="font-size:0.78rem; font-weight:700; letter-spacing:0.06em; padding:4px 12px; border-radius:20px; ${t.reserveOpen ? 'background:#d4f0dc; color:#1a7a3a;' : 'background:#f0f0f0; color:#999;'}">
             ${t.reserveOpen ? '● 予約受付中' : '○ 受付停止中'}

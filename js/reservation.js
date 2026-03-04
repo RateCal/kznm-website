@@ -429,13 +429,25 @@ function searchTrains() {
   // 普通乗車券（時刻表なし・料金のみ）
   const stopCount = Math.abs(route.toIdx - route.fromIdx);
   const localFare = calcLocalFare(stopCount) * pax;
+  const localKey = `local_${fromCode}_${toCode}_${date}_${Math.random().toString(36).slice(2,6)}`;
+  _reserveRegistry[localKey] = {
+    isLocal: true,
+    typeLabel: '普通', trainNo: '', trainName: '',
+    fare: localFare, fareNote: `（${pax}名）`,
+    depTime: '当日有効', arrTime: '当日有効',
+    fromName, toName, pax,
+    seatId: 'general', seatLabel: '普通乗車券',
+    isGeneral: true, isCharter: false, charterPass: '',
+    cars: [], date,
+  };
+  const localActionBtn = isPastDate
+    ? `<span style="font-size:0.75rem;color:#aaa;letter-spacing:0.06em;">運行終了</span>`
+    : `<button class="btn btn-primary reserve-btn" onclick="openReserve('${localKey}')" style="font-size:0.82rem; white-space:nowrap;">購入する</button>`;
   const localCard = document.createElement('div');
   localCard.className = 'train-card';
   localCard.innerHTML = `
     <div class="train-card-header" style="border-left-color:#888;">
-      <span class="train-type-badge" style="background:#888;">
-        ○ 普通
-      </span>
+      <span class="train-type-badge" style="background:#888;">○ 普通</span>
       <span class="train-line-name">普通乗車券</span>
     </div>
     <div class="train-card-body">
@@ -444,9 +456,7 @@ function searchTrains() {
       </div>
       <div class="train-fare-area">
         <div class="fare-price">¥${localFare.toLocaleString()}<span class="fare-note">（${pax}名）</span></div>
-        <button class="btn reserve-btn" disabled style="cursor:not-allowed; opacity:0.5; background:#aaa; border-color:#aaa; color:#fff; font-size:0.78rem; letter-spacing:0.08em; white-space:nowrap;">
-          予約受付停止中
-        </button>
+        ${localActionBtn}
       </div>
     </div>
   `;
@@ -666,6 +676,14 @@ function openReserve(key) {
         <div><strong>${data.typeLabel}</strong>${data.trainNo ? '　' + data.trainNo + '号' : ''}${data.trainName ? '　' + data.trainName : ''}</div>
         <div style="color:var(--color-text-light);">乗降駅を選択すると運賃が確定します</div>
       </div>`;
+  } else if (data.isLocal) {
+    document.getElementById('modal-summary').innerHTML = `
+      <div style="font-size:0.82rem;line-height:2;">
+        <div><strong>普通乗車券</strong></div>
+        <div>${data.fromName} → ${data.toName}</div>
+        <div>時刻指定なし・当日有効　${data.pax}名</div>
+      </div>
+      <div class="fare-price" style="margin-top:6px;">¥${data.fare.toLocaleString()}<span class="fare-note">${data.fareNote}</span></div>`;
   } else {
     const seatLine = data.isGeneral ? '一般車（自由乗車）' : data.seatLabel;
     document.getElementById('modal-summary').innerHTML = `
@@ -1091,7 +1109,7 @@ function _saveReservation(data, seat, mcid, ticketNo) {
       arrTime:   data.arrTime   || '—',
       pax:       data.pax       || 1,
       seatLabel: data.seatLabel || '一般車',
-      seat:      seat ? `${seat.carNo}号車 ${seat.label}` : (data.isGeneral ? '自由乗車（一般車）' : '自由席'),
+      seat:      seat ? `${seat.carNo}号車 ${seat.label}` : (data.isLocal ? '普通乗車券（自由乗車）' : data.isGeneral ? '自由乗車（一般車）' : '自由席'),
       fare:      data.fare      || 0,
       fareNote:  data.fareNote  || '',
       mcid:      mcid,
@@ -1172,6 +1190,7 @@ function _generateTicket(data, selectedSeat, mcid, ticketNo) {
   if (!ticketNo) ticketNo = 'RU' + Date.now().toString().slice(-8) + String(Math.floor(Math.random()*100)).padStart(2,'0');
   const seat = selectedSeat
     ? `${selectedSeat.carNo}号車 ${selectedSeat.label}`
+    : data.isLocal ? '普通乗車券（自由乗車）'
     : data.isGeneral ? '自由乗車（一般車）' : (data.seatId === 'free' ? '自由席' : '座席未指定');
   const rawDate = data.date || new Date().toISOString().slice(0,10);
   const d = new Date(rawDate + 'T00:00:00');

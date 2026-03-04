@@ -1,265 +1,288 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/4 16:20:50
+// eるりきゅう 時刻表管理システム 出力 2026/3/4 16:36:22
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
   "trains": [
     {
-      "id": "train-1772197348775",
-      "type": "special-rapid",
-      "name": "田所 810号",
-      "runDays": [
-        "2026-02-27",
-        "2026-02-28"
-      ],
-      "stops": [
-        {
-          "code": "A1",
-          "arr": null,
-          "dep": "08:10"
-        },
-        {
-          "code": "C1",
-          "arr": "19:19",
-          "dep": null
-        }
-      ],
-      "notice": "下北沢へは参りませんので、ご注意ください。",
-      "trainNo": "9810A",
-      "cars": [
-        {
-          "carNo": 1,
-          "seatClass": "general",
-          "seats": 16,
-          "note": ""
-        },
-        {
-          "carNo": 2,
-          "seatClass": "general",
-          "seats": 16,
-          "note": ""
-        },
-        {
-          "carNo": 3,
-          "seatClass": "general",
-          "seats": 16,
-          "note": ""
-        },
-        {
-          "carNo": 4,
-          "seatClass": "reserved",
-          "seats": 16,
-          "note": "車内は禁煙です。喫煙室をご利用ください。"
-        }
-      ],
-      "reserveOpen": false
-    },
-    {
-      "id": "train-1772262134376",
-      "type": "charter",
-      "trainNo": "9951",
-      "name": "修学旅行",
-      "runDays": [
-        "2026-03-01"
-      ],
-      "notice": "",
-      "charterPass": "0050",
-      "cars": [
-        {
-          "carNo": 1,
-          "seatClass": "general",
-          "seats": 16,
-          "note": ""
-        },
-        {
-          "carNo": 2,
-          "seatClass": "general",
-          "seats": 16,
-          "note": ""
-        },
-        {
-          "carNo": 3,
-          "seatClass": "general",
-          "seats": 16,
-          "note": ""
-        },
-        {
-          "carNo": 4,
-          "seatClass": "special",
-          "seats": 16,
-          "note": ""
-        }
-      ],
-      "stops": [
-        {
-          "code": "Y02",
-          "arr": null,
-          "dep": "08:45"
-        },
-        {
-          "code": "Y01",
-          "arr": "09:13",
-          "dep": null
-        },
-        {
-          "code": "A1",
-          "arr": "09:36",
-          "dep": "09:38"
-        },
-        {
-          "code": "A4",
-          "arr": "10:09",
-          "dep": "10:11"
-        },
-        {
-          "code": "B3",
-          "arr": "10:28",
-          "dep": "10:31"
-        },
-        {
-          "code": "B4",
-          "arr": "10:50",
-          "dep": null
-        }
-      ],
-      "reserveOpen": true
-    },
-    {
-      "id": "train-1772352469901",
-      "type": "rapid",
-      "trainNo": "",
-      "name": "",
-      "runDays": [],
-      "notice": "",
-      "charterPass": "",
-      "reserveOpen": false,
-      "cars": [],
-      "stops": []
-    },
-    {
-      "id": "train-1772539039741",
-      "type": "rapid",
-      "trainNo": "8081",
-      "name": "夜行急行 はなしま 1号",
-      "runDays": "weekday",
-      "notice": "控え車での就寝は、お気に召さない可能性が大いにございます。",
-      "charterPass": "",
-      "reserveOpen": false,
-      "cars": [
-        {
-          "carNo": 1,
-          "seatClass": "special",
-          "seats": 13,
-          "note": "A寝台二段"
-        },
-        {
-          "carNo": 2,
-          "seatClass": "special",
-          "seats": 13,
-          "note": "A寝台二段"
-        },
-        {
-          "carNo": 3,
-          "seatClass": "reserved",
-          "seats": 24,
-          "note": "B寝台三段"
-        },
-        {
-          "carNo": 4,
-          "seatClass": "reserved",
-          "seats": 24,
-          "note": "B寝台三段"
-        },
-        {
-          "carNo": 5,
-          "seatClass": "reserved",
-          "seats": 21,
-          "note": "B寝台三段"
-        },
-        {
-          "carNo": 6,
-          "seatClass": "free",
-          "seats": 30,
-          "note": "控え座席車"
-        }
-      ],
-      "stops": [
-        {
-          "code": "Y02",
-          "arr": null,
-          "dep": "22:38"
-        },
-        {
-          "code": "Y01",
-          "arr": "22:43",
-          "dep": "22:45"
-        },
-        {
-          "code": "C1",
-          "arr": "23:27",
-          "dep": "23:29"
-        },
-        {
-          "code": "A1",
-          "arr": "23:41",
-          "dep": "23:45"
-        },
-        {
-          "code": "A4",
-          "arr": "00:01",
-          "dep": "00:03"
-        },
-        {
-          "code": "A5",
-          "arr": "00:28",
-          "dep": "05:48"
-        },
-        {
-          "code": "A6",
-          "arr": "05:52",
-          "dep": "05:56"
-        },
-        {
-          "code": "A6",
-          "arr": "06:18",
-          "dep": "06:21"
-        },
-        {
-          "code": "A7",
-          "arr": "06:28",
-          "dep": null
-        }
-      ]
-    },
-    {
       "id": "train-1772608642596",
       "type": "holiday-rapid",
-      "trainNo": "A8591",
+      "trainNo": "B0591",
       "name": "快速 ゆきみ野 1号",
       "runDays": "weekend",
       "notice": "",
       "charterPass": "",
       "reserveOpen": false,
-      "cars": [],
+      "cars": [
+        {
+          "carNo": 1,
+          "seatClass": "free",
+          "seats": 56,
+          "note": "喫煙可能"
+        },
+        {
+          "carNo": 2,
+          "seatClass": "reserved",
+          "seats": 56,
+          "note": "禁煙"
+        },
+        {
+          "carNo": 3,
+          "seatClass": "reserved",
+          "seats": 51,
+          "note": "禁煙"
+        }
+      ],
       "stops": [
         {
-          "code": "A1",
+          "code": "X01",
           "arr": null,
-          "dep": null
+          "dep": "09:13"
+        },
+        {
+          "code": "C1",
+          "arr": "09:17",
+          "dep": "09:18"
         },
         {
           "code": "A1",
-          "arr": null,
+          "arr": "09:25",
+          "dep": "09:27"
+        },
+        {
+          "code": "A4",
+          "arr": "09:32",
+          "dep": "09:34"
+        },
+        {
+          "code": "A5",
+          "arr": "09:39",
+          "dep": "09:41"
+        },
+        {
+          "code": "A6",
+          "arr": "09:44",
+          "dep": "09:45"
+        },
+        {
+          "code": "A8",
+          "arr": "09:51",
+          "dep": "09:52"
+        },
+        {
+          "code": "A7",
+          "arr": "09:56",
           "dep": null
+        }
+      ]
+    },
+    {
+      "id": "train-1772609302698",
+      "type": "holiday-rapid",
+      "trainNo": "C0593",
+      "name": "快速 ゆきみ野 3号",
+      "runDays": "weekend",
+      "notice": "",
+      "charterPass": "",
+      "reserveOpen": false,
+      "cars": [
+        {
+          "carNo": 1,
+          "seatClass": "free",
+          "seats": 56,
+          "note": "喫煙可能"
+        },
+        {
+          "carNo": 2,
+          "seatClass": "reserved",
+          "seats": 56,
+          "note": "禁煙"
+        },
+        {
+          "carNo": 3,
+          "seatClass": "reserved",
+          "seats": 51,
+          "note": "禁煙"
+        }
+      ],
+      "stops": [
+        {
+          "code": "Y02",
+          "arr": null,
+          "dep": "09:48"
+        },
+        {
+          "code": "Y01",
+          "arr": "09:55",
+          "dep": "10:03"
+        },
+        {
+          "code": "C1",
+          "arr": "10:17",
+          "dep": "10:18"
         },
         {
           "code": "A1",
-          "arr": null,
+          "arr": "10:25",
+          "dep": "10:27"
+        },
+        {
+          "code": "A4",
+          "arr": "10:32",
+          "dep": "10:34"
+        },
+        {
+          "code": "A5",
+          "arr": "10:39",
+          "dep": "10:41"
+        },
+        {
+          "code": "A6",
+          "arr": "10:44",
+          "dep": "10:45"
+        },
+        {
+          "code": "A8",
+          "arr": "10:51",
+          "dep": "10:52"
+        },
+        {
+          "code": "A7",
+          "arr": "10:57",
           "dep": null
+        }
+      ]
+    },
+    {
+      "id": "train-1772609437981",
+      "type": "holiday-rapid",
+      "trainNo": "A0592V",
+      "name": "快速 ゆきみ野 2号（通常運転）",
+      "runDays": "weekend",
+      "notice": "",
+      "charterPass": "",
+      "reserveOpen": false,
+      "cars": [
+        {
+          "carNo": 1,
+          "seatClass": "free",
+          "seats": 56,
+          "note": "喫煙可能"
+        },
+        {
+          "carNo": 2,
+          "seatClass": "reserved",
+          "seats": 56,
+          "note": "禁煙"
+        },
+        {
+          "carNo": 3,
+          "seatClass": "reserved",
+          "seats": 51,
+          "note": "禁煙"
+        }
+      ],
+      "stops": [
+        {
+          "code": "A7",
+          "arr": "09:51",
+          "dep": "17:38"
+        },
+        {
+          "code": "A8",
+          "arr": "17:45",
+          "dep": "16:48"
+        },
+        {
+          "code": "A6",
+          "arr": "17:55",
+          "dep": "18:01"
+        },
+        {
+          "code": "A5",
+          "arr": "18:05",
+          "dep": "18:06"
         },
         {
           "code": "A1",
-          "arr": null,
+          "arr": "18:22",
+          "dep": "18:24"
+        },
+        {
+          "code": "C1",
+          "arr": "18:27",
+          "dep": null
+        }
+      ]
+    },
+    {
+      "id": "train-1772609632980",
+      "type": "holiday-rapid",
+      "trainNo": "A0592V",
+      "name": "快速 ゆきみ野 2号（延長運転）",
+      "runDays": "weekend",
+      "notice": "",
+      "charterPass": "",
+      "reserveOpen": false,
+      "cars": [
+        {
+          "carNo": 4,
+          "seatClass": "free",
+          "seats": 56,
+          "note": "喫煙可能"
+        },
+        {
+          "carNo": 5,
+          "seatClass": "reserved",
+          "seats": 56,
+          "note": "禁煙"
+        },
+        {
+          "carNo": 6,
+          "seatClass": "reserved",
+          "seats": 51,
+          "note": "禁煙"
+        }
+      ],
+      "stops": [
+        {
+          "code": "A7",
+          "arr": "09:51",
+          "dep": "17:38"
+        },
+        {
+          "code": "A8",
+          "arr": "17:45",
+          "dep": "16:48"
+        },
+        {
+          "code": "A6",
+          "arr": "17:55",
+          "dep": "18:01"
+        },
+        {
+          "code": "A5",
+          "arr": "18:05",
+          "dep": "18:06"
+        },
+        {
+          "code": "A1",
+          "arr": "18:22",
+          "dep": "18:24"
+        },
+        {
+          "code": "C1",
+          "arr": "18:27",
+          "dep": "18:31"
+        },
+        {
+          "code": "Y01",
+          "arr": "18:37",
+          "dep": "18:39"
+        },
+        {
+          "code": "Y02",
+          "arr": "18:43",
           "dep": null
         }
       ]
