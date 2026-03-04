@@ -1,5 +1,5 @@
 // js/timetable-data.js
-// eるりきゅう 時刻表管理システム 出力 2026/3/4 16:17:13
+// eるりきゅう 時刻表管理システム 出力 2026/3/4 16:20:50
 // ※ 手動編集より管理システム (admin.html) の使用を推奨します。
 
 const TIMETABLE = {
@@ -139,12 +139,12 @@ const TIMETABLE = {
     {
       "id": "train-1772539039741",
       "type": "rapid",
-      "trainNo": "9091",
+      "trainNo": "8081",
       "name": "夜行急行 はなしま 1号",
       "runDays": "weekday",
       "notice": "控え車での就寝は、お気に召さない可能性が大いにございます。",
       "charterPass": "",
-      "reserveOpen": true,
+      "reserveOpen": false,
       "cars": [
         {
           "carNo": 1,
@@ -195,27 +195,27 @@ const TIMETABLE = {
           "dep": "22:45"
         },
         {
-          "code": "A1",
+          "code": "C1",
           "arr": "23:27",
           "dep": "23:29"
         },
         {
-          "code": "A4",
+          "code": "A1",
           "arr": "23:41",
           "dep": "23:45"
         },
         {
-          "code": "B1",
+          "code": "A4",
           "arr": "00:01",
           "dep": "00:03"
         },
         {
-          "code": "A4",
+          "code": "A5",
           "arr": "00:28",
           "dep": "05:48"
         },
         {
-          "code": "A5",
+          "code": "A6",
           "arr": "05:52",
           "dep": "05:56"
         },
@@ -227,6 +227,39 @@ const TIMETABLE = {
         {
           "code": "A7",
           "arr": "06:28",
+          "dep": null
+        }
+      ]
+    },
+    {
+      "id": "train-1772608642596",
+      "type": "holiday-rapid",
+      "trainNo": "A8591",
+      "name": "快速 ゆきみ野 1号",
+      "runDays": "weekend",
+      "notice": "",
+      "charterPass": "",
+      "reserveOpen": false,
+      "cars": [],
+      "stops": [
+        {
+          "code": "A1",
+          "arr": null,
+          "dep": null
+        },
+        {
+          "code": "A1",
+          "arr": null,
+          "dep": null
+        },
+        {
+          "code": "A1",
+          "arr": null,
+          "dep": null
+        },
+        {
+          "code": "A1",
+          "arr": null,
           "dep": null
         }
       ]
